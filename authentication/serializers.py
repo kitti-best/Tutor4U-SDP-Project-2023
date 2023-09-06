@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from django.contrib.auth import authenticate
+from rest_framework.exceptions import AuthenticationFailed
 from django_password_validators.password_character_requirements.password_validation import PasswordCharacterValidator
 from django.core.exceptions import ValidationError
 from User.models import UserModel
-from abc import ABC, abstractmethod
+
 
 pwd_validator = PasswordCharacterValidator(
     min_length_digit=8,
@@ -24,7 +24,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data: dict):
         try:
-            self.error = ''
             password = validated_data.get('password', None)
             pwd_validator.validate(password)
             
@@ -38,26 +37,31 @@ class RegisterSerializer(serializers.ModelSerializer):
             user.save()
             
             return user
-        except ValidationError as error:
-            self.error = error
+        except ValidationError:
+            return
+
 
 class LoginSerializer(serializers.Serializer):
+
+    email = serializers.EmailField()
+    password = serializers.CharField()
     
-    class Meta:
-        model = UserModel
-        fields = (
-            'email', 
-            'password'
-        )
-        extra_kwargs = {'password': {'write_only': True}}
-
-
     def check_user(self, validated_data: dict):
         try:
-            user = authenticate(
-                username=validated_data.get('email', None), 
-                password=validated_data.get('password', None)
-            )
+            email=validated_data.get('email', None)
+            password=validated_data.get('password', None)
+            
+            print(email)
+            print(password)
+            user = UserModel.objects.get(email=email)
+            
+            if (not user.is_active):
+                raise AuthenticationFailed('User are not activate')
+            if (not user.check_password(password)):
+                raise AuthenticationFailed('Password incorrect')
+            
             return user
-        except ValidationError as error:
-            raise serializers.ValidationError({'message': error.message})
+        except ValidationError:
+            raise AuthenticationFailed('Invalid Email Input')
+        except UserModel.DoesNotExist:
+            raise AuthenticationFailed('User not found')
