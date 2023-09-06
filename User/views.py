@@ -3,6 +3,7 @@ from rest_framework import status, permissions
 from rest_framework.views import APIView
 from .serializer import UserSerializer
 from .models import CustomUser
+from django.http import HttpResponseRedirect, Http404
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .tokens import account_activation_token
@@ -13,6 +14,7 @@ from django.contrib.auth.hashers import make_password
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate, get_user_model
 from django.contrib import messages
+from django.urls import reverse
 
 
 def activate(request, uidb64, token):
@@ -25,13 +27,11 @@ def activate(request, uidb64, token):
     if user is not None and account_activation_token.check_token(user, token):
         user.active()
         user.save()
-
-        messages.success(request, "Thank you for your email confirmation. Now you can login your account.")
-        return redirect('user/login')
-    else:
-        messages.error(request, "Activation link is invalid!")
-
-    return redirect('/')
+        url = 'https://www.google.com'
+        return HttpResponseRedirect(redirect_to=url)
+    else: # error
+        error_url = 'https://www.google.com'
+        return HttpResponseRedirect(redirect_to=error_url)
 
 
 def activateEmail(request, user):
@@ -48,18 +48,29 @@ def activateEmail(request, user):
     if not email.send():
         return False
     return True
+
 class UserAuthViewSet(APIView):
     
     def post(self, request):
         data = request.data.get('data')
+        password = data['password']
         data['password'] = make_password(data['password'])
-        serializer = UserSerializer(data=data)
-        if (serializer.is_valid(raise_exception=True)):
-            saved = serializer.save()
-        activateEmail(request, saved)
-        return Response({
-            'message': 'success',
-        }, status=status.HTTP_201_CREATED)
+        try:
+            user = CustomUser.objects.get(email=data['email'])
+            if user.check_password(password):
+                activateEmail(request, user)
+                return Response({'message': 'resend activation email'})
+            else:
+                return Response({'message': 'password mismatch'})
+            
+        except CustomUser.DoesNotExist:
+            serializer = UserSerializer(data=data)
+            if (serializer.is_valid(raise_exception=True)):
+                saved = serializer.save()
+            activateEmail(request, saved)
+            return Response({
+                'message': 'success',
+            }, status=status.HTTP_201_CREATED)
 
 
 class EmailLogin(APIView):
