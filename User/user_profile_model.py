@@ -13,7 +13,6 @@ class UserProfile(models.Model):
     phone = models.CharField(max_length=15)
     date_joined = models.DateTimeField(auto_now_add=True)
     contact_number = models.CharField(max_length=20, blank=True, null=True)
-    zipcode = models.CharField(max_length=20)
     date_of_birth = models.DateField(blank=True, null=True)
     is_tutor = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
@@ -26,3 +25,7 @@ class UserProfile(models.Model):
 
     def create_tutor(self):
         self.is_tutor = True
+
+
+
+    
