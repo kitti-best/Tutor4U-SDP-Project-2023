@@ -7,8 +7,14 @@ class LearningCenter(models.Model):
     _uuid = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
     description = models.TextField()
-    location = models.CharField(max_length=255)
-    address = models.CharField(max_length=255, blank=True)
+    latitude = models.FloatField(max_length=15)
+    longtitude = models.FloatField(max_length=15)
+    house_number = models.CharField(max_length=15) # เลขที่บ้าน
+    section = models.CharField(max_length=10) # หมู่บ้าน
+    sub_district = models.CharField(max_length=30) # ตำบล
+    district = models.CharField(max_length=30) # อำเภอ
+    province = models.CharField(max_length=30) # จังหวัด
+    country = models.CharField(max_length=30, default="Thailand")
     website = models.URLField(blank=True, null=True)
     phone_number = models.IntegerField(max_length=10, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
