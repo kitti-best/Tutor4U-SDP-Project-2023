@@ -8,7 +8,7 @@ class LearningCenter(models.Model):
     _uuid = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
     description = models.TextField()
-    location = gis_models.PointField()
+    location = models.CharField(max_length=255)
     address = models.CharField(max_length=255, blank=True)
     website = models.URLField(blank=True, null=True)
     phone_number = models.IntegerField(max_length=10, blank=True, null=True)
