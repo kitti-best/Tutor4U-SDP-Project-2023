@@ -1,6 +1,7 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.exceptions import AuthenticationFailed
 from django_password_validators.password_character_requirements.password_validation import PasswordCharacterValidator
+from django.db.models import Q
 from django.core.exceptions import ValidationError
 from User.models import UserModel
 
@@ -42,26 +43,23 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-
-    email = serializers.EmailField()
-    password = serializers.CharField()
     
     def check_user(self, validated_data: dict):
         try:
             email=validated_data.get('email', None)
+            username=validated_data.get('username', None)
             password=validated_data.get('password', None)
             
-            print(email)
-            print(password)
-            user = UserModel.objects.get(email=email)
+            user = UserModel.objects.filter(Q(email=email) | Q(username=username)).first()
             
+            if (user is None):
+                raise AuthenticationFailed({ 'message': 'User not found' })
             if (not user.is_active):
-                raise AuthenticationFailed('User are not activate')
+                raise AuthenticationFailed({ 'message': 'User are not activate' })
             if (not user.check_password(password)):
-                raise AuthenticationFailed('Password incorrect')
+                raise AuthenticationFailed({ 'message': 'Password incorrect' })
             
             return user
         except ValidationError:
-            raise AuthenticationFailed('Invalid Email Input')
-        except UserModel.DoesNotExist:
-            raise AuthenticationFailed('User not found')
+            raise AuthenticationFailed({ 'message': 'Invalid Input' })
+    
