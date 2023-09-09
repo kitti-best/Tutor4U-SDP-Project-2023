@@ -62,4 +62,10 @@ class LoginSerializer(serializers.Serializer):
             return user
         except ValidationError:
             raise AuthenticationFailed({ 'message': 'Invalid Input' })
+
+
+class LogoutSerializer(serializers.Serializer):
+    
+    def sign_out(self, data: dict):
+        pass
     
