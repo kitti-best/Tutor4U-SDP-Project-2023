@@ -1,7 +1,6 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
 from django.contrib.auth.models import User
-from django.contrib.gis.db import models as gis_models
 import uuid
 
 class LearningCenter(models.Model):
