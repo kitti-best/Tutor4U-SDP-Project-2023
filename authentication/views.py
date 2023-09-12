@@ -1,12 +1,12 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from django.contrib.auth import login, logout
-from django.http import HttpResponseRedirect
-from .serializers import RegisterSerializer, LoginSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from .serializers import RegisterSerializer, LoginSerializer, LogoutAllSerializer
 from abc import ABC, abstractmethod
-from utils.token_generator import TokenManager as token
+from utils.token_manager import TokenManager
 import environ
 
 env = environ.Env()
@@ -40,7 +40,6 @@ class EmailRegistrationAPIViews(RegisterBase):
                 { 'message': serializer.errors }, 
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
         return Response(
                 { 'message': 'success' }, 
                 status=status.HTTP_201_CREATED
@@ -54,16 +53,12 @@ class LoginAPIViews(LoginBase):
         data = request.data
         serializer = self.serializer_class(data=data)
         if (serializer.is_valid(raise_exception=True)):
-            user = serializer.check_user(data)
+            user = serializer.check_user(request, data)
         
-        login(request, user)
-        username = user.username
-        access_token = token.generate(username=username, option='ACCESS')
-        refresh_token = token.generate(username=username, option='REFRESH')
+        access_token, refresh_token = TokenManager.generate(user)
         response = Response(
                 {
                     'message': 'Login success', 
-                    'username': username, 
                     'access_token': access_token
                 }, 
                 status=status.HTTP_200_OK,
@@ -74,50 +69,58 @@ class LoginAPIViews(LoginBase):
             httponly=True, 
             secure =(env('NODE_ENV') == 'production')
         )
-        
-        response.set_cookie(
-            key='access_token', 
-            value=access_token, 
-            httponly=True, 
-            secure =(env('NODE_ENV') == 'production')
-        )
         return response
 
 
-class AdminLoginAPIViews(LoginAPIViews):
-    pass
-    # def post(self, request):
-    #     return super().post(self, request, self.is_super)
+class LogoutAPIViews(APIView):
+    permission_classes = (IsAuthenticated, )
     
-    # def is_super(user):
-    #     return user.is_superuser
+    def post(self, request):
+        try:
+            cookies = request.COOKIES
+            refresh_token = cookies.get('refresh_token', None)
+            if (refresh_token is None):
+                return Response(
+                    { 'message': '\'refresh_token\' not found' }, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            
+            response = Response(
+                    { 'message': 'Logout' }, 
+                    status=status.HTTP_205_RESET_CONTENT
+                )
+            for cookie in cookies.keys():
+                response.delete_cookie(cookie)
+            
+            return response
+        except Exception as error:
+            return Response(
+                    { 'message': str(error) }, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
 
-class TokenRefreshAPIViews(APIView):
+class LogoutAllAPIViews(APIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = LogoutAllSerializer
     
-    def get(self, request):
-        refresh_token = request.COOKIES.get('refresh_token', None)
-        if (request is None):
-            return HttpResponseRedirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-        
-        token_data = token.extract(refresh_token, 'REFRESH')
-        if (token_data is None):
-            return Response({ 'message': 'Session expired' }, status=status.HTTP_401_UNAUTHORIZED)
-        
-        username = token_data.get('username')
+    def post(self, request):
+        headers = request.headers
+        cookies = request.COOKIES
+        serializer = self.serializer_class(data=headers)
+        if (serializer.is_valid(raise_exception=True)):
+            _ = serializer.check_token(headers)
+
         response = Response(
-                { 
-                    'message': 'Token Refresh', 
-                    'username': username
+                {
+                    'message': 'Logout success', 
                 }, 
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_205_RESET_CONTENT,
             )
-        access_token = token.generate(username=username, option='ACCESS')
-        response.set_cookie(
-            key='access_token', 
-            value=access_token, 
-            httponly=True, 
-            secure =(env('NODE_ENV') == 'production')
-        )
+        for cookie in cookies.keys():
+            response.delete_cookie(cookie)
         
         return response

@@ -1,9 +1,16 @@
 from rest_framework import serializers, status
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+
 from django_password_validators.password_character_requirements.password_validation import PasswordCharacterValidator
 from django.db.models import Q
+from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
+
 from User.models import UserModel
+
+from utils.token_manager import TokenManager
 
 
 pwd_validator = PasswordCharacterValidator(
@@ -42,9 +49,38 @@ class RegisterSerializer(serializers.ModelSerializer):
             return
 
 
+class LogoutAllSerializer(serializers.Serializer):
+    
+    def check_token(self, validated_data: dict):
+        try:
+            token = validated_data.get('Authorization', None)
+            if (token is None):
+                raise NotAuthenticated({ 'message': '\'refresh_token\' not found'})
+            
+            if (token.startswith('Bearer ')):
+                token_data = TokenManager.extract(token.removeprefix('Bearer '))
+            
+            if (token_data is None):
+                raise NotAuthenticated({ 'message': 'Token is invalid or expired' })
+
+            _uuid = token_data.get('_uuid', None)
+            user = UserModel.objects.filter(_uuid=_uuid).first()
+
+            if (user is None):
+                raise NotAuthenticated({ 'message': 'User not found' })
+
+            tokens = OutstandingToken.objects.filter(user=user._uuid)
+            for token in tokens:
+                t, _ = BlacklistedToken.objects.get_or_create(token=token)
+            
+            return user
+        except Exception as error:
+            raise NotAuthenticated({ 'message': str(error) })
+
+
 class LoginSerializer(serializers.Serializer):
     
-    def check_user(self, validated_data: dict):
+    def check_user(self, request, validated_data: dict):
         try:
             email=validated_data.get('email', None)
             username=validated_data.get('username', None)
@@ -59,13 +95,18 @@ class LoginSerializer(serializers.Serializer):
             if (not user.check_password(password)):
                 raise AuthenticationFailed({ 'message': 'Password incorrect' })
             
-            return user
+            return authenticate(
+                    request=request, 
+                    username=user.username, 
+                    password=password
+                )
         except ValidationError:
             raise AuthenticationFailed({ 'message': 'Invalid Input' })
 
 
-class LogoutSerializer(serializers.Serializer):
-    
-    def sign_out(self, data: dict):
-        pass
-    
+class TokenGenaratorSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['_uuid'] = user._uuid.hex
+        return token
