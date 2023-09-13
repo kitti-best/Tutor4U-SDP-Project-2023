@@ -14,4 +14,5 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view()), 
     path('token/generate', TokenObtainPairView.as_view()),
     path('token/verify/', TokenVerifyView.as_view())
+    path('activate/<str:uidb64>/<str:token>/', views.EmailActivation.as_view())
 ]
