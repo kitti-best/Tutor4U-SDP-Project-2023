@@ -12,6 +12,23 @@ import environ
 env = environ.Env()
 environ.Env.read_env()
 
+class EmailActivation(APIView):
+    def post(request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(pk=uid)
+        except:
+            user = None
+        print(user)
+        if user is not None and account_activation_token.check_token(user, token):
+            user.active()
+            user.save()
+            url = 'https://www.google.com'
+            return HttpResponseRedirect(redirect_to=url)
+        else: # error
+            error_url = 'https://www.google.com'
+            return HttpResponseRedirect(redirect_to=error_url)
+
 class RegisterBase(APIView, ABC):
     permission_classes = (AllowAny, )
     
@@ -28,6 +45,21 @@ class LoginBase(APIView, ABC):
 
 class EmailRegistrationAPIViews(RegisterBase):
     serializer_class = RegisterSerializer
+
+    def activateEmail(request, user):
+        mail_subject = "Activate your user account."
+        message = render_to_string("activate_account.html", {
+            'username': user.username,
+            'domain': get_current_site(request).domain,
+            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+            'token': account_activation_token.make_token(user),
+            "protocol": 'https' if request.is_secure() else 'http'
+        })
+        
+        email = EmailMessage(mail_subject, message, to=[user.email])
+        if not email.send():
+            return False
+        return True
     
     def post(self, request):
         data = request.data
