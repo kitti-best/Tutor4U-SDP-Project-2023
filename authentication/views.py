@@ -4,6 +4,18 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from django.http import HttpResponseRedirect
+from django.core.mail import EmailMessage
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.template.loader import render_to_string
+from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+
+from ..User.models import UserModel
+from serializers import pwd_validator
+
 from .serializers import RegisterSerializer, LoginSerializer, LogoutAllSerializer
 from abc import ABC, abstractmethod
 from utils.token_manager import TokenManager
@@ -12,15 +24,59 @@ import environ
 env = environ.Env()
 environ.Env.read_env()
 
+class ResetPassword(APIView):
+    def post(request, uidb64, token, password):
+        error_url = 'https://www.google.com'
+        url = 'https://www.google.com'
+        
+        try:
+            pwd_validator.validate(password=password)
+        except:
+            return HttpResponseRedirect(redirect_to=error_url)
+        
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = UserModel.objects.get(_uuid=uid)
+        except:
+            user = None
+
+        if user is not None and PasswordResetTokenGenerator().check_token(user, token):
+            user.set_password(password)
+            user.save()
+            return HttpResponseRedirect(redirect_to=url)
+        else: # error
+            return HttpResponseRedirect(redirect_to=error_url)
+
+class ResetPasswordSender(APIView):
+    def post(request, email):
+        try:
+            user = UserModel.objects.get(email=email)
+        except:
+            user = None
+        if user is not None:
+            mail_subject = "Rest your password."
+            message = render_to_string("reset_password.html", {
+                'username': user.username,
+                'domain': get_current_site(request).domain,
+                'uid': urlsafe_base64_encode(force_bytes(user._uuid)),
+                'token': PasswordResetTokenGenerator().make_token(user),
+                "protocol": 'https' if request.is_secure() else 'http'
+            })
+            email = EmailMessage(mail_subject, message, to=[user.email])
+            if not email.send():
+                return Response({'message': 'problem sending email'})
+            return Response({'message': 'reset password email sended'})
+        return Response({'message': 'email not found'})
+
 class EmailActivation(APIView):
     def post(request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
-            user = CustomUser.objects.get(pk=uid)
+            user = UserModel.objects.get(_uuid=uid)
         except:
             user = None
-        print(user)
-        if user is not None and account_activation_token.check_token(user, token):
+        
+        if user is not None and PasswordResetTokenGenerator().check_token(user, token):
             user.active()
             user.save()
             url = 'https://www.google.com'
@@ -51,8 +107,8 @@ class EmailRegistrationAPIViews(RegisterBase):
         message = render_to_string("activate_account.html", {
             'username': user.username,
             'domain': get_current_site(request).domain,
-            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            'token': account_activation_token.make_token(user),
+            'uid': urlsafe_base64_encode(force_bytes(user._uuid)),
+            'token': PasswordResetTokenGenerator().make_token(user),
             "protocol": 'https' if request.is_secure() else 'http'
         })
         
