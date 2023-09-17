@@ -1,10 +1,7 @@
 from django.db import models
-
-# Create your models here.
 from django.core.validators import MinLengthValidator
 from django.contrib.auth.models import AbstractUser
 import uuid
-
 
 class UserModel(AbstractUser):
     _uuid = models.UUIDField(
@@ -30,7 +27,7 @@ class UserModel(AbstractUser):
     )
     is_active = models.BooleanField(default=False)
     
-    def __str__(self) -> str:
+    def __str__(self):
         return self.username
     
     def activate(self):
