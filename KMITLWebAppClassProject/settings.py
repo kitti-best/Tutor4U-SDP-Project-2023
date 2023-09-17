@@ -48,8 +48,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt', 
     'rest_framework_simplejwt.token_blacklist', 
     'authentication', 
+    'LearningCenter',
     'User',
-    'LearningCenter'
 ]
 
 MIDDLEWARE = [
@@ -88,7 +88,7 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
 
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": env('SECRET_KEY'),
+    "SIGNING_KEY": env('REFRESH_KEY'),
     "VERIFYING_KEY": "",
     "AUDIENCE": None,
     "ISSUER": None,

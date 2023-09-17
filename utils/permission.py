@@ -1,4 +1,4 @@
-from .User.models import UserModel
+from ..User.models import UserModel
 from django.contrib.auth.models import Permission
 
 
