@@ -14,7 +14,7 @@ from utils.token_manager import TokenManager
 
 
 pwd_validator = PasswordCharacterValidator(
-    min_length_digit=8, 
+    min_length_digit=5, 
     min_length_alpha=2, 
     min_length_special=1, 
     min_length_lower=1, 
