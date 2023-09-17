@@ -8,3 +8,4 @@ admin = ['asdfasd', 'asdnl']
 for username in admin:
   user = UserModel.objects.get(username=username)
   user.user_permissions.add(learning_center_approval_permission)
+  user.save()
