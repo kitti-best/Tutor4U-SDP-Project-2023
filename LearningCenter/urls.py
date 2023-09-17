@@ -5,4 +5,5 @@ from . import views
 urlpatterns = [
     path('learningcenters/', views.ManageLearningCenter.as_view(), name='manage-learning-center'),
     path('search/', views.SearchLearningCenter.as_view(), name='search-learning-center'),
+    path('change-status/<str:name>/<str:status>/', views.ChangeLearningCenterStatus.as_view())
 ]
