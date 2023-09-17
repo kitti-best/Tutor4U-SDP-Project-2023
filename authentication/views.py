@@ -13,8 +13,8 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
-from ..User.models import UserModel
-from serializers import pwd_validator
+from User.models import UserModel
+from authentication.serializers import pwd_validator
 
 from .serializers import RegisterSerializer, LoginSerializer, LogoutAllSerializer
 from abc import ABC, abstractmethod
