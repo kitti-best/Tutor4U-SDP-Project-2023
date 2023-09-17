@@ -38,5 +38,5 @@ class LearningCenter(models.Model):
     def update_status(self, status):
         self.status = status
     
-    # class Meta:
-    #     permissions = (('approvable', 'can approve or reject the learning center'))
+    class Meta:
+        permissions = [('approvable', 'can approve or reject the learning center')]
