@@ -27,3 +27,26 @@ class SearchNameLearningCenter(SearchLearningCenter):
         serializer = LearningCenterSerializer(learning_centers, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ChangeLearningCenterStatus(APIView):
+    permission_classes = 'LearningCenter.approvable'
+
+    def post(self, request, name, status):
+        LC_STATUS = (
+            ('waiting', 'waiting'),
+            ('approve', 'approve'),
+            ('reject', 'reject')
+        )
+        if status not in LC_STATUS:
+            return Response({'message': 'please enter valid status'})
+        
+        try:
+            learning_center = LearningCenter.objects.get(name=name)
+        except:
+            learning_center = None
+        
+        if learning_center is not None:
+            learning_center.update_status()
+            learning_center.save()
+            return Response({'message': 'status updated'})
+        return Response({'message': 'failed to update'})

@@ -25,6 +25,18 @@ class LearningCenter(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)  # The user who owns the learning center
     subjects_taught = ArrayField(models.CharField(max_length=255, blank=False)) 
     popularity = models.IntegerField(default=0)
+    LC_STATUS = (
+        ('waiting', 'waiting'),
+        ('approve', 'approve'),
+        ('reject', 'reject')
+    )
+    status = models.CharField(choices=LC_STATUS, editable=False, default='waiting')
 
     def __str__(self):
         return(f"{self.name}")
+
+    def update_status(self, status):
+        self.status = status
+    
+    class Meta:
+        permissions = (('approvable', 'can approve or reject the learning center'))
