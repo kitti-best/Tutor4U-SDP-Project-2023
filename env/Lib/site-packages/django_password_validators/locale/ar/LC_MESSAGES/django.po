@@ -1,0 +1,240 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+# Translators:
+# 15/4/2021
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-03-16 10:08+0100\n"
+"PO-Revision-Date: 2021-04-07 09:11+0000\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#: password_character_requirements/password_validation.py:31
+#, python-format
+msgid "This password must contain at least %(min_length)d digit."
+msgid_plural "This password must contain at least %(min_length)d digits."
+msgstr[0] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصرًا على الأقل."
+msgstr[1] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصرًا على الأقل."
+msgstr[2] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصرًا على الأقل."
+msgstr[3] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصرًا على الأقل."
+msgstr[4] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصرًا على الأقل."
+msgstr[5] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصرًا على الأقل."
+
+#: password_character_requirements/password_validation.py:41
+#, python-format
+msgid "This password must contain at least %(min_length)d letter."
+msgid_plural "This password must contain at least %(min_length)d letters."
+msgstr[0] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل."
+msgstr[1] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل."
+msgstr[2] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل."
+msgstr[3] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل."
+msgstr[4] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل."
+msgstr[5] "يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل."
+
+#: password_character_requirements/password_validation.py:51
+#, python-format
+msgid "This password must contain at least %(min_length)d upper case letter."
+msgid_plural ""
+"This password must contain at least %(min_length)d upper case letters."
+msgstr[0] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الكبيرة."
+msgstr[1] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الكبيرة."
+msgstr[2] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الكبيرة."
+msgstr[3] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الكبيرة."
+msgstr[4] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الكبيرة."
+msgstr[5] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الكبيرة."
+
+#: password_character_requirements/password_validation.py:61
+#, python-format
+msgid "This password must contain at least %(min_length)d lower case letter."
+msgid_plural ""
+"This password must contain at least %(min_length)d lower case letters."
+msgstr[0] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الصغيرة."
+msgstr[1] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الصغيرة."
+msgstr[2] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الصغيرة."
+msgstr[3] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الصغيرة."
+msgstr[4] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الصغيرة."
+msgstr[5] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d حرفًا على الأقل في حالة "
+"الأحرف الصغيرة."
+
+#: password_character_requirements/password_validation.py:71
+#, python-format
+msgid "This password must contain at least %(min_length)d special character."
+msgid_plural ""
+"This password must contain at least %(min_length)d special characters."
+msgstr[0] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصر على الأقل في الحالة "
+"الخاصة."
+msgstr[1] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصر على الأقل في الحالة "
+"الخاصة."
+msgstr[2] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصر على الأقل في الحالة "
+"الخاصة."
+msgstr[3] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصر على الأقل في الحالة "
+"الخاصة."
+msgstr[4] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصر على الأقل في الحالة "
+"الخاصة."
+msgstr[5] ""
+"يجب أن تحتوي كلمة المرور هذه على %(min_length)d عنصر على الأقل في الحالة "
+"الخاصة."
+
+#: password_character_requirements/password_validation.py:86
+#, python-format
+msgid "%(min_length)s letter"
+msgid_plural "%(min_length)s letters"
+msgstr[0] "%(min_length)s حرفاً"
+msgstr[1] "%(min_length)s حرفاً"
+msgstr[2] "%(min_length)s حرفاً"
+msgstr[3] "%(min_length)s حرفاً"
+msgstr[4] "%(min_length)s حرفاً"
+msgstr[5] "%(min_length)s حرفاً"
+
+#: password_character_requirements/password_validation.py:94
+#, python-format
+msgid "%(min_length)s digit"
+msgid_plural "%(min_length)s digits"
+msgstr[0] "%(min_length)s عنصرًا"
+msgstr[1] "%(min_length)s عنصرًا"
+msgstr[2] "%(min_length)s عنصرًا"
+msgstr[3] "%(min_length)s عنصرًا"
+msgstr[4] "%(min_length)s عنصرًا"
+msgstr[5] "%(min_length)s عنصرًا"
+
+#: password_character_requirements/password_validation.py:102
+#, python-format
+msgid "%(min_length)s lower case letter"
+msgid_plural "%(min_length)s lower case letters"
+msgstr[0] "%(min_length)s  حرفًا في حالة الأحرف الصغيرة"
+msgstr[1] "%(min_length)s  حرفًا في حالة الأحرف الصغيرة"
+msgstr[2] "%(min_length)s  حرفًا في حالة الأحرف الصغيرة"
+msgstr[3] "%(min_length)s  حرفًا في حالة الأحرف الصغيرة"
+msgstr[4] "%(min_length)s حرفًا في حالة الأحرف الصغيرة"
+msgstr[5] "%(min_length)s حرفًا في حالة الأحرف الصغيرة"
+
+#: password_character_requirements/password_validation.py:110
+#, python-format
+msgid "%(min_length)s upper case letter"
+msgid_plural "%(min_length)s upper case letters"
+msgstr[0] "%(min_length)s حرفًا في حالة الأحرف الكبيرة"
+msgstr[1] "%(min_length)s حرفًا في حالة الأحرف الكبيرة"
+msgstr[2] "%(min_length)s حرفًا في حالة الأحرف الكبيرة "
+msgstr[3] "%(min_length)s حرفًا في حالة الأحرف الكبيرة"
+msgstr[4] "%(min_length)s حرفًا في حالة الأحرف الكبيرة"
+msgstr[5] "%(min_length)s حرفًا في حالة الأحرف الكبيرة"
+
+#: password_character_requirements/password_validation.py:118
+#, python-format
+msgid ""
+"%(min_length_special)s special character, such as %(special_characters)s"
+msgid_plural ""
+"%(min_length_special)s special characters, such as %(special_characters)s"
+msgstr[0] ""
+"%(min_length_special)s عنصرًا في الحالة الخاصة مثل: %(special_characters)s"
+msgstr[1] ""
+"%(min_length_special)s عنصرًا في الحالة الخاصة مثل: %(special_characters)s"
+msgstr[2] ""
+"%(min_length_special)s عنصرًا في الحالة الخاصة مثل: %(special_characters)s"
+msgstr[3] ""
+"%(min_length_special)s عنصرًا في الحالة الخاصة مثل: %(special_characters)s"
+msgstr[4] ""
+"%(min_length_special)s عنصرًا في الحالة الخاصة مثل: %(special_characters)s"
+msgstr[5] ""
+"%(min_length_special)s عنصرًا في الحالة الخاصة مثل: %(special_characters)s"
+
+#: password_character_requirements/password_validation.py:123
+msgid "This password must contain at least"
+msgstr "يجب أن تحتوي كلمة المرور على"
+
+#: password_history/models.py:20
+msgid "When created salt"
+msgstr "عند تقديم مقترحات"
+
+#: password_history/models.py:25
+msgid "Salt for the user"
+msgstr "مقترح للمستخدم"
+
+#: password_history/models.py:30
+msgid "The number of iterations for hasher"
+msgstr "عدد تعديلات المشفرين"
+
+#: password_history/models.py:38
+msgid "Configuration"
+msgstr "تكوين"
+
+#: password_history/models.py:39
+msgid "Configurations"
+msgstr "تكوينات"
+
+#: password_history/models.py:78
+msgid "Password hash"
+msgstr "شفرة كلمة المرور"
+
+#: password_history/models.py:83
+msgid "Date"
+msgstr "التاريخ"
+
+#: password_history/password_validation.py:81
+msgid "You can not use a password that is already used in this application."
+msgstr "لا يمكنك استخدام كلمة مرور قد تم استخدامها بالفعل مسبقا"
+
+#: password_history/password_validation.py:122
+#, python-format
+msgid ""
+"Your new password can not be identical to any of the %(old_pass)d previously "
+"entered passwords."
+msgid_plural ""
+"Your new password can not be identical to any of the %(old_pass)d previously "
+"entered passwords."
+msgstr[0] ""
+"لا يمكن أن تكون كلمة المرور الجديدة مطابقة لأية %(old_pass)d كلمة مرور سابقة."
+msgstr[1] ""
+"لا يمكن أن تكون كلمة المرور الجديدة مطابقة لأية %(old_pass)d كلمة مرور سابقة."
+msgstr[2] ""
+"لا يمكن أن تكون كلمة المرور الجديدة مطابقة لأية %(old_pass)d كلمة مرور سابقة."
+msgstr[3] ""
+"لا يمكن أن تكون كلمة المرور الجديدة مطابقة لأية %(old_pass)d كلمة مرور سابقة."
+msgstr[4] ""
+"لا يمكن أن تكون كلمة المرور الجديدة مطابقة لأية %(old_pass)d كلمة مرور سابقة."
+msgstr[5] ""
+"لا يمكن أن تكون كلمة المرور الجديدة مطابقة لأية %(old_pass)d كلمة مرور سابقة."
+
+#: password_history/password_validation.py:128
+msgid ""
+"Your new password can not be identical to any of the previously entered."
+msgstr "لايمكن أن تكون كلمة المرور الجديدة مطابقة لأية كلمة مرور سابقة."

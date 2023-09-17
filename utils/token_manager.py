@@ -1,6 +1,7 @@
 from rest_framework_simplejwt.tokens import RefreshToken
 from KMITLWebAppClassProject.settings import SIMPLE_JWT
 from datetime import datetime
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 import jwt
 
 import environ

@@ -3,7 +3,7 @@ from . import views
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView, 
-    TokenVerifyView
+    TokenVerifyView,
 )
 
 urlpatterns = [
@@ -13,6 +13,6 @@ urlpatterns = [
     path('sign-out/all', views.LogoutAllAPIViews.as_view()),
     path('token/refresh/', TokenRefreshView.as_view()), 
     path('token/generate', TokenObtainPairView.as_view()),
-    path('token/verify/', TokenVerifyView.as_view())
+    path('token/verify/', TokenVerifyView.as_view()),
     path('activate/<str:uidb64>/<str:token>/', views.EmailActivation.as_view())
 ]
