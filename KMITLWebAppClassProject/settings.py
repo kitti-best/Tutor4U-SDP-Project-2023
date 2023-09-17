@@ -25,7 +25,7 @@ environ.Env.read_env()
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%9l6c+rfpe0j5_0%6d8koxg+4s!c5kfrf$1+tl)u!1hms#fzzr'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist', 
     'authentication', 
     'User',
-    'LearningCenter' 
+    'LearningCenter'
 ]
 
 MIDDLEWARE = [
