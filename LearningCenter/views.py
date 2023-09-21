@@ -5,6 +5,8 @@ from .models import LearningCenter
 from .serializers import LearningCenterSerializer
 from abc import ABC, abstractmethod
 from django.db.models import Q
+from django.contrib.auth.models import Permission
+from django.contrib.auth.decorators import permission_required
 
 class ManageLearningCenter(APIView):
     def post(self, request):
@@ -48,25 +50,60 @@ class SearchLearningCenter(APIView, ABC):
 
         return queryset
 
-class ChangeLearningCenterStatus(APIView):
-    permission_classes = 'LearningCenter.approvable'
-
-    def post(self, request, name, status):
-        LC_STATUS = (
-            ('waiting', 'waiting'),
-            ('approve', 'approve'),
-            ('reject', 'reject')
-        )
-        if status not in LC_STATUS:
-            return Response({'message': 'please enter valid status'})
+class LearningCenterDefaultPendingPage(APIView):
+    def get(self, request):
+        if not request.user.has_perm('LearningCenter.learning_center_admin'):
+            return Response(
+                {'message': 'user doesn\'t have permission'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         
         try:
-            learning_center = LearningCenter.objects.get(name=name)
+            result = LearningCenter.objects.filter(status='waiting').order_by('date_created')
+            serializer = LearningCenterSerializer(result, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except:
+            return Response(
+                {'message': 'Failed to retrieve data'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
+class ChangeLearningCenterStatus(APIView):
+    # permission_required  = 'LearningCenter.approvable'
+
+    def post(self, request):
+        LC_STATUS = (
+            'waiting',
+            'approve',
+            'reject'
+        )
+
+        if not request.user.has_perm('LearningCenter.learning_center_admin'):
+            return Response(
+                {'message': 'user doesn\'t have permission'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        data = request.data
+        if data.get('status', None) not in LC_STATUS:
+            return Response(
+                {'message': 'please enter valid status'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            learning_center = LearningCenter.objects.get(name=data.get('name', None))
         except:
             learning_center = None
         
         if learning_center is not None:
-            learning_center.update_status()
+            learning_center.update_status(data.get('status'))
             learning_center.save()
-            return Response({'message': 'status updated'})
-        return Response({'message': 'failed to update'})
+            return Response(
+                {'message': 'status updated'},
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            {'message': 'cannot find learning center with this name'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
