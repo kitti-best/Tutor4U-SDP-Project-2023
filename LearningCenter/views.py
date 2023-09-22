@@ -20,7 +20,6 @@ class ViewLearningCenterStudentInformation(APIView):
     def get(self, request, id):
         learning_center = get_object_or_404(LearningCenter, _uuid=id)
         learning_center = LearningCenterSerializer(learning_center)
-        return Response(learning_center.data, status=status.HTTP_200_OK)
         learning_center_student = LearningCenterStudentSerializer(learning_center)
         return Response(learning_center_student.data, status=status.HTTP_200_OK)
 
@@ -96,6 +95,7 @@ class SearchLearningCenter(APIView, ABC):
         queryset = LearningCenter.objects.filter(query).order_by('-popularity')
 
         return queryset
+
 
 class LearningCenterDefaultPendingPage(APIView):
     def get(self, request):
