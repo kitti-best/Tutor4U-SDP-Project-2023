@@ -24,6 +24,9 @@ class LearningCenter(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey(UserModel, on_delete=models.CASCADE)  # The user who owns the learning center
     subjects_taught = ArrayField(models.CharField(max_length=255, blank=False))
+    levels = ArrayField(models.CharField(max_length=255, blank=False))
+    popularity = models.FloatField(max_length=15, default=0)
+    subjects_taught = ArrayField(models.CharField(max_length=255, blank=False))
     popularity = models.IntegerField(default=0)
     LC_STATUS = (
         ('waiting', 'waiting'),
@@ -39,7 +42,7 @@ class LearningCenter(models.Model):
         self.status = status
     
     class Meta:
-        permissions = [('approvable', 'can approve or reject the learning center')]
+        permissions = [('learning_center_admin', 'can approve or reject the learning center, can view the waiting and reject learning center')]
 
 
 class Student(models.Model):

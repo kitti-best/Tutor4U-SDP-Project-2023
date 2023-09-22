@@ -12,3 +12,4 @@ sqlparse==0.4.4
 typing_extensions==4.7.1
 tzdata==2023.3
 Pillow==10.0.1
+django-cors-headers==4.2.0
