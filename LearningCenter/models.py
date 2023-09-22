@@ -31,7 +31,7 @@ class LearningCenter(models.Model):
         ('approve', 'approve'),
         ('reject', 'reject')
     )
-    status = models.CharField(max_length=20,choices=LC_STATUS, editable=False, default='waiting')
+    status = models.CharField(max_length=20, choices=LC_STATUS, editable=False, default='waiting')
 
     def __str__(self):
         return(f"{self.name}")
@@ -40,4 +40,4 @@ class LearningCenter(models.Model):
         self.status = status
     
     class Meta:
-        permissions = [('approvable', 'can approve or reject the learning center')]
+        permissions = [('learning_center_admin', 'can approve or reject the learning center, can view the waiting and reject learning center')]

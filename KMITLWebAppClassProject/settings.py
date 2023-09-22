@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'authentication', 
     'LearningCenter',
     'User',
+    'utils',
 ]
 
 MIDDLEWARE = [
@@ -200,3 +201,12 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+# emailing settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_FROM = 'cakswatreuxngxram@gmail.com'
+EMAIL_HOST_USER = 'cakswatreuxngxram@gmail.com'
+EMAIL_HOST_PASSWORD = 'jffvhcsjfpnutkso'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
