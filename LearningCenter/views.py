@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
+
 class ViewLearningCenterInformation(APIView):
     def get(self, request, id):
         learning_center = get_object_or_404(LearningCenter, _uuid=id)
