@@ -26,6 +26,8 @@ class LearningCenter(models.Model):
     subjects_taught = ArrayField(models.CharField(max_length=255, blank=False))
     levels = ArrayField(models.CharField(max_length=255, blank=False))
     popularity = models.FloatField(max_length=15, default=0)
+    subjects_taught = ArrayField(models.CharField(max_length=255, blank=False))
+    popularity = models.IntegerField(default=0)
     LC_STATUS = (
         ('waiting', 'waiting'),
         ('approve', 'approve'),
@@ -34,10 +36,41 @@ class LearningCenter(models.Model):
     status = models.CharField(max_length=20, choices=LC_STATUS, editable=False, default='waiting')
 
     def __str__(self):
-        return(f"{self.name}")
+        return f"{self.name}"
 
     def update_status(self, status):
         self.status = status
     
     class Meta:
         permissions = [('learning_center_admin', 'can approve or reject the learning center, can view the waiting and reject learning center')]
+
+
+class Student(models.Model):
+    '''
+    {
+    "name": "on c mand",
+    "description": "The best learning center in the world on mand"ม
+    "learning_center": name i think
+    }
+    '''
+    student_id = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
+    name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
+    description = models.TextField()
+    learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
+    # field_name = models.ImageField(upload_to='picture', height_field=None, width_field=None, max_length=100)
+
+
+# unfi
+class Tutor(models.Model):
+    '''
+    {
+    "name": "on c mand",
+    "description": "The best learning center in the world on mand"ม
+    "learning_center": name i think
+    }
+    '''
+    tutor_id = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
+    name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
+    description = models.TextField()
+    learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
+    # profile = models.ImageField(upload_to='picture', height_field=None, width_field=None, max_length=100)

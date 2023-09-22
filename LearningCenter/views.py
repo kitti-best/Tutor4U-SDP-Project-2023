@@ -1,20 +1,62 @@
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import LearningCenter
-from .serializers import LearningCenterSerializer
+from .models import LearningCenter, Student, Tutor
+from .serializers import LearningCenterSerializer, LearningCenterStudentSerializer
 from abc import ABC, abstractmethod
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 
 class ViewLearningCenterInformation(APIView):
+    def get(self, request, name):
+        learning_center = get_object_or_404(LearningCenter, name=name)
+        learning_center = LearningCenterSerializer(learning_center)
+        return Response(learning_center.data, status=status.HTTP_200_OK)
+
+
+class ViewLearningCenterStudentInformation(APIView):
     def get(self, request, id):
         learning_center = get_object_or_404(LearningCenter, _uuid=id)
         learning_center = LearningCenterSerializer(learning_center)
         return Response(learning_center.data, status=status.HTTP_200_OK)
+        learning_center_student = LearningCenterStudentSerializer(learning_center)
+        return Response(learning_center_student.data, status=status.HTTP_200_OK)
+
 from django.contrib.auth.models import Permission
 from django.contrib.auth.decorators import permission_required
+
+
+class AddStudentToLearningCenter(APIView):
+    '''
+    {
+        "name": "on c mand",
+        "description": "The best learning center in the world on mand"
+    }
+    '''
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        data = request.data
+        new_student = Student(**data)
+        new_student.save()
+
+
+# unfi
+class AddTutorToLearningCenter(APIView):
+    def post(self, request):
+        data = request.data
+        new_learning_center = Student(**data)
+        new_learning_center.save()
+
+
+class ViewLearningCenterTutorInformation(APIView):
+    def get(self, request, id):
+        learning_center = get_object_or_404(LearningCenter, _uuid=id)
+        learning_center_tutor = LearningCenterStudentSerializer(learning_center)
+        return Response(learning_center_tutor.data, status=status.HTTP_200_OK)
+
 
 class ManageLearningCenter(APIView):
     def post(self, request):
@@ -23,6 +65,7 @@ class ManageLearningCenter(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class SearchLearningCenter(APIView, ABC):
     def get(self, request):
@@ -61,7 +104,7 @@ class LearningCenterDefaultPendingPage(APIView):
                 {'message': 'user doesn\'t have permission'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
-        
+
         try:
             result = LearningCenter.objects.filter(status='waiting').order_by('date_created')
             serializer = LearningCenterSerializer(result, many=True)
