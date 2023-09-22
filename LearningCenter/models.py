@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 from django.contrib.postgres.fields import ArrayField
 import uuid
 
+
 class LearningCenter(models.Model):
     _uuid = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
