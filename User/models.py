@@ -3,6 +3,7 @@ from django.core.validators import MinLengthValidator
 from django.contrib.auth.models import AbstractUser
 import uuid
 
+
 class UserModel(AbstractUser):
     _uuid = models.UUIDField(
         default=uuid.uuid4, 
