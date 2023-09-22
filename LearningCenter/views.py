@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -7,13 +6,15 @@ from .models import LearningCenter, Student, Tutor
 from .serializers import LearningCenterSerializer, LearningCenterStudentSerializer
 from abc import ABC, abstractmethod
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
-# fi
+
 class ViewLearningCenterInformation(APIView):
     def get(self, request, name):
         learning_center = get_object_or_404(LearningCenter, name=name)
         learning_center = LearningCenterSerializer(learning_center)
         return Response(learning_center.data, status=status.HTTP_200_OK)
+
 
 # uf
 class ViewLearningCenterStudentInformation(APIView):
@@ -21,6 +22,7 @@ class ViewLearningCenterStudentInformation(APIView):
         learning_center = get_object_or_404(LearningCenter, _uuid=id)
         learning_center_student = LearningCenterStudentSerializer(learning_center)
         return Response(learning_center_student.data, status=status.HTTP_200_OK)
+
 
 # unfi
 class AddStudentToLearningCenter(APIView):
@@ -36,6 +38,7 @@ class AddStudentToLearningCenter(APIView):
         data = request.data
         new_student = Student(**data)
         new_student.save()
+
 
 # unfi
 class AddTutorToLearningCenter(APIView):
@@ -64,24 +67,20 @@ class ManageLearningCenter(APIView):
 class SearchLearningCenter(APIView, ABC):
     def get(self, request):
         name = self.request.query_params.get('name', '')
-        ratings = self.request.query_params.get('rating', '').split(',')
         levels = self.request.query_params.get('level', '').split(',')
         subjects_taught = self.request.query_params.get('subjects_taught', '').split(',')
 
-        result_learning_centers = self.search_learning_centers(name, ratings, levels, subjects_taught)
+        result_learning_centers = self.search_learning_centers(name, levels, subjects_taught)
         serializer = LearningCenterSerializer(result_learning_centers, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def search_learning_centers(self, name, ratings, levels, subjects_taught):
+    def search_learning_centers(self, name, levels, subjects_taught):
         # Query use for complex queries
         query = Q()
 
         if name:
             query |= Q(name__icontains=name)
-
-        for rating in ratings:
-            query &= Q(rating__icontains=rating.strp())
 
         for level in levels:
             query &= Q(levels__icontains=level.strip())
@@ -96,25 +95,60 @@ class SearchLearningCenter(APIView, ABC):
         return queryset
 
 
-class ChangeLearningCenterStatus(APIView):
-    permission_classes = 'LearningCenter.approvable'
+class LearningCenterDefaultPendingPage(APIView):
+    def get(self, request):
+        if not request.user.has_perm('LearningCenter.learning_center_admin'):
+            return Response(
+                {'message': 'user doesn\'t have permission'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
-    def post(self, request, name, status):
+        try:
+            result = LearningCenter.objects.filter(status='waiting').order_by('date_created')
+            serializer = LearningCenterSerializer(result, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except:
+            return Response(
+                {'message': 'Failed to retrieve data'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
+class ChangeLearningCenterStatus(APIView):
+    # permission_required  = 'LearningCenter.approvable'
+
+    def post(self, request):
         LC_STATUS = (
-            ('waiting', 'waiting'),
-            ('approve', 'approve'),
-            ('reject', 'reject')
+            'waiting',
+            'approve',
+            'reject'
         )
-        if status not in LC_STATUS:
-            return Response({'message': 'please enter valid status'})
+
+        if not request.user.has_perm('LearningCenter.learning_center_admin'):
+            return Response(
+                {'message': 'user doesn\'t have permission'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        data = request.data
+        if data.get('status', None) not in LC_STATUS:
+            return Response(
+                {'message': 'please enter valid status'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         try:
-            learning_center = LearningCenter.objects.get(name=name)
+            learning_center = LearningCenter.objects.get(name=data.get('name', None))
         except:
             learning_center = None
         
         if learning_center is not None:
-            learning_center.update_status()
+            learning_center.update_status(data.get('status'))
             learning_center.save()
-            return Response({'message': 'status updated'})
-        return Response({'message': 'failed to update'})
+            return Response(
+                {'message': 'status updated'},
+                status=status.HTTP_200_OK
+            )
+        return Response(
+            {'message': 'cannot find learning center with this name'},
+            status=status.HTTP_400_BAD_REQUEST
+        )

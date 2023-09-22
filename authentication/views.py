@@ -25,7 +25,7 @@ env = environ.Env()
 environ.Env.read_env()
 
 class ResetPassword(APIView):
-    def post(request, uidb64, token, password):
+    def post(self, request, uidb64, token, password):
         error_url = 'https://www.google.com'
         url = 'https://www.google.com'
         
@@ -48,13 +48,22 @@ class ResetPassword(APIView):
             return HttpResponseRedirect(redirect_to=error_url)
 
 class ResetPasswordSender(APIView):
-    def post(request, email):
+    def post(self, request):
+        data = request.data
+        email = data.get('email', None)
+
+        if email == None:
+            return Response(
+                { 'message': 'please send payload with email'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         try:
             user = UserModel.objects.get(email=email)
         except:
             user = None
         if user is not None:
-            mail_subject = "Rest your password."
+            mail_subject = "Reset your password."
             message = render_to_string("reset_password.html", {
                 'username': user.username,
                 'domain': get_current_site(request).domain,
@@ -64,12 +73,21 @@ class ResetPasswordSender(APIView):
             })
             email = EmailMessage(mail_subject, message, to=[user.email])
             if not email.send():
-                return Response({'message': 'problem sending email'})
-            return Response({'message': 'reset password email sended'})
-        return Response({'message': 'email not found'})
+                return Response(
+                    {'message': 'problem sending email'},
+                    status = status.HTTP_503_SERVICE_UNAVAILABLE # I'm not sure what status to return here
+                )
+            return Response(
+                {'message': 'reset password email sended'},
+                status=status.HTTP_200_OK # I'm not sure what status to return here
+            )
+        return Response(
+            {'message': 'email not found'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 class EmailActivation(APIView):
-    def post(request, uidb64, token):
+    def post(self, request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = UserModel.objects.get(_uuid=uid)
@@ -77,7 +95,7 @@ class EmailActivation(APIView):
             user = None
         
         if user is not None and PasswordResetTokenGenerator().check_token(user, token):
-            user.active()
+            user.activate()
             user.save()
             url = 'https://www.google.com'
             return HttpResponseRedirect(redirect_to=url)
@@ -102,7 +120,7 @@ class LoginBase(APIView, ABC):
 class EmailRegistrationAPIViews(RegisterBase):
     serializer_class = RegisterSerializer
 
-    def activateEmail(request, user):
+    def activateEmail(self, request, user):
         mail_subject = "Activate your user account."
         message = render_to_string("activate_account.html", {
             'username': user.username,
@@ -128,6 +146,13 @@ class EmailRegistrationAPIViews(RegisterBase):
                 { 'message': serializer.errors }, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        if not self.activateEmail(request, user):
+            return Response(
+                { 'message': 'Failed to send email' },
+                status = status.HTTP_503_SERVICE_UNAVAILABLE # I'm not sure what status to return here
+            )
+
         return Response(
                 { 'message': 'success' }, 
                 status=status.HTTP_201_CREATED
