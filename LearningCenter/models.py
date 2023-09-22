@@ -5,19 +5,26 @@ from django.core.validators import RegexValidator
 from django.contrib.postgres.fields import ArrayField
 import uuid
 
+class Location(models.Model):
+    house_number = models.CharField(max_length=15, default='')
+    section = models.CharField(max_length=10, default='')
+    street = models.CharField(max_length=15, default='')
+    sub_district = models.CharField(max_length=30, default='')
+    district = models.CharField(max_length=30, default='')
+    province = models.CharField(max_length=30, default='')
+    country = models.CharField(max_length=30, default="Thailand")
+
+    class Meta:
+        verbose_name_plural = "Locations"
+
 class LearningCenter(models.Model):
     _uuid = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
+    profile_picture_url = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField()
     latitude = models.FloatField(max_length=15, default=0)
     longtitude = models.FloatField(max_length=15, default=0)
-    house_number = models.CharField(max_length=15, default='') # เลขที่บ้าน
-    section = models.CharField(max_length=10, default='') # หมู่บ้าน
-    street = models.CharField(max_length=15, default='') # ถนน
-    sub_district = models.CharField(max_length=30, default='') # ตำบล
-    district = models.CharField(max_length=30, default='') # อำเภอ
-    province = models.CharField(max_length=30, default='') # จังหวัด
-    country = models.CharField(max_length=30, default="Thailand")
+    location = models.OneToOneField(Location, on_delete=models.CASCADE, null=True)
     website = models.URLField(blank=True, null=True)
     phone = models.CharField(max_length=30, default='', validators=[RegexValidator(regex="((\+66|0)(\d{1,2}\-?\d{3}\-?\d{3,4}))|((\+๖๖|๐)([๐-๙]{1,2}\-?[๐-๙]{3}\-?[๐-๙]{3,4}))")])
     email = models.EmailField(blank=True, null=True)
