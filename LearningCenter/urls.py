@@ -10,4 +10,5 @@ urlpatterns = [
     path('change-status/<str:name>/<str:status>/', views.ChangeLearningCenterStatus.as_view()),
     path("view/<name>", views.ViewLearningCenterInformation.as_view(), name="view"),
     path("add_student", views.AddStudentToLearningCenter.as_view(), name="add_student"),
+    path("add_tutor", views.AddTutorToLearningCenter.as_view(), name="add_tutor"),
 ]
