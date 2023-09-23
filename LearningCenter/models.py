@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
+from django import forms
 from User.models import UserModel
 from django.core.validators import RegexValidator
 from django.contrib.postgres.fields import ArrayField
@@ -47,31 +48,25 @@ class LearningCenter(models.Model):
 
 
 class Student(models.Model):
-    '''
-    {
-    "name": "on c mand",
-    "description": "The best learning center in the world on mand"ม
-    "learning_center": name i think
-    }
-    '''
     student_id = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
     description = models.TextField()
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
-    # field_name = models.ImageField(upload_to='picture', height_field=None, width_field=None, max_length=100)
+    profile = models.ImageField(upload_to='student_pictures', height_field=None, width_field=None, max_length=100)
 
 
-# unfi
 class Tutor(models.Model):
-    '''
-    {
-    "name": "on c mand",
-    "description": "The best learning center in the world on mand"ม
-    "learning_center": name i think
-    }
-    '''
     tutor_id = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
     description = models.TextField()
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
-    # profile = models.ImageField(upload_to='picture', height_field=None, width_field=None, max_length=100)
+    profile = models.ImageField(upload_to='tutor_pictures', height_field=None, width_field=None, max_length=100)
+
+
+class TutorImageForm(forms.Form):
+    name = forms.CharField()
+    description = forms.CharField()
+    profile = forms.ImageField()
+    learning_center = forms.ModelChoiceField(
+        queryset=LearningCenter.objects.all()
+    )

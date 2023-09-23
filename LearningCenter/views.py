@@ -2,10 +2,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import LearningCenter, Student, Tutor
+from .models import LearningCenter, Student, Tutor, TutorImageForm
 from .serializers import LearningCenterSerializer, LearningCenterStudentSerializer
 from abc import ABC, abstractmethod
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
+
 from django.shortcuts import get_object_or_404
 
 
@@ -28,26 +30,40 @@ from django.contrib.auth.decorators import permission_required
 
 
 class AddStudentToLearningCenter(APIView):
-    '''
-    {
-        "name": "on c mand",
-        "description": "The best learning center in the world on mand"
-    }
-    '''
-    permission_classes = (IsAuthenticated,)
-
+    # permission_classes = (IsAuthenticated,)
     def post(self, request):
         data = request.data
         new_student = Student(**data)
         new_student.save()
+        return Response(status=status.HTTP_200_OK)
 
 
 # unfi
 class AddTutorToLearningCenter(APIView):
     def post(self, request):
-        data = request.data
-        new_learning_center = Student(**data)
-        new_learning_center.save()
+        data: dict = request.data
+
+        # django append _id for foreignkey column
+        # So we will remove the old one and replace with ones with _id instead
+        learning_center_id = data['learning_center']
+        data['learning_center_id'] = learning_center_id
+
+        # remove unwanted key
+        data.pop('learning_center')
+        data.pop('csrfmiddlewaretoken')
+
+        # change query object to normal dictionary
+        data_as_dict = {}
+        # dict is mutable so this work
+        [data_as_dict.update({key: val}) for key, val in data.items()]
+
+        new_tutor = Tutor(**data_as_dict)
+        new_tutor.save()
+        return Response(status=status.HTTP_200_OK)
+
+    def get(self, request):
+        form = TutorImageForm()
+        return render(request, "gallery.html", {"form": form})
 
 
 class ViewLearningCenterTutorInformation(APIView):
@@ -114,6 +130,7 @@ class LearningCenterDefaultPendingPage(APIView):
                 {'message': 'Failed to retrieve data'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
+
 
 class ChangeLearningCenterStatus(APIView):
     # permission_required  = 'LearningCenter.approvable'
