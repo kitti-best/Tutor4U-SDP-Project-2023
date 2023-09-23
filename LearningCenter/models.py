@@ -48,13 +48,6 @@ class LearningCenter(models.Model):
 
 
 class Student(models.Model):
-    '''
-    {
-    "name": "on c mand",
-    "description": "The best learning center in the world on mand"ม
-    "learning_center": name i think
-    }
-    '''
     student_id = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
     description = models.TextField()
@@ -62,15 +55,7 @@ class Student(models.Model):
     profile = models.ImageField(upload_to='student_pictures', height_field=None, width_field=None, max_length=100)
 
 
-# unfi
 class Tutor(models.Model):
-    '''
-    {
-    "name": "on c mand",
-    "description": "The best learning center in the world on mand"ม
-    "learning_center": name i think
-    }
-    '''
     tutor_id = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
     description = models.TextField()
@@ -79,9 +64,6 @@ class Tutor(models.Model):
 
 
 class TutorImageForm(forms.Form):
-    # class Meta:
-        # model = Tutor
-        # fields = "__all__"
     name = forms.CharField()
     description = forms.CharField()
     profile = forms.ImageField()
