@@ -6,8 +6,9 @@ from .models import LearningCenter, Student, Tutor, TutorImageForm
 from .serializers import LearningCenterSerializer, LearningCenterStudentSerializer
 from abc import ABC, abstractmethod
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
-
+from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.models import Permission
+from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404
 
 
@@ -25,9 +26,6 @@ class ViewLearningCenterStudentInformation(APIView):
         learning_center_student = LearningCenterStudentSerializer(learning_center)
         return Response(learning_center_student.data, status=status.HTTP_200_OK)
 
-from django.contrib.auth.models import Permission
-from django.contrib.auth.decorators import permission_required
-
 
 class AddStudentToLearningCenter(APIView):
     # permission_classes = (IsAuthenticated,)
@@ -38,7 +36,6 @@ class AddStudentToLearningCenter(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-# unfi
 class AddTutorToLearningCenter(APIView):
     def post(self, request):
         data: dict = request.data
