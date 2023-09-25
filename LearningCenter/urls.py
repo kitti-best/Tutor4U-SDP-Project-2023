@@ -1,8 +1,9 @@
+from django.conf.urls.static import static
 from django.urls import path
-from .views import ManageLearningCenter
 from . import views
 
 urlpatterns = [
+    path('', views.Index.as_view(), name='index'),
     path('create/', views.ManageLearningCenter.as_view(), name='manage-learning-center'),
     path('search/', views.SearchLearningCenter.as_view(), name='search-learning-center'),
     path('change-status/', views.ChangeLearningCenterStatus.as_view()),

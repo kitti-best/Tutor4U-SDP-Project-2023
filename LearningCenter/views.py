@@ -3,13 +3,25 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import LearningCenter, Student, Tutor, TutorImageForm
-from .serializers import LearningCenterSerializer, LearningCenterStudentSerializer
+from .serializers import LearningCenterSerializer, LearningCenterStudentSerializer, TutorSerializer
 from abc import ABC, abstractmethod
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.models import Permission
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404
+
+
+class Index(APIView):
+    def get(self, request):
+        tutors_data = []
+        tutors = Tutor.objects.all()
+
+        for tutor in tutors:
+            tutor_data = TutorSerializer(tutor).data
+            tutors_data.append(tutor_data)
+
+        return render(request, 'view_images.html', {"tutors": tutors})
 
 
 class ViewLearningCenterInformation(APIView):
@@ -44,6 +56,7 @@ class AddTutorToLearningCenter(APIView):
         # So we will remove the old one and replace with ones with _id instead
         learning_center_id = data['learning_center']
         data['learning_center_id'] = learning_center_id
+        image = data['profile']
 
         # remove unwanted key
         data.pop('learning_center')
