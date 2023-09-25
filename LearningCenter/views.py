@@ -2,6 +2,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from .forms import CustomUserForm
 from .models import LearningCenter, Student, Tutor, TutorImageForm
 from .serializers import LearningCenterSerializer, LearningCenterStudentSerializer
 from abc import ABC, abstractmethod
@@ -62,6 +63,14 @@ class AddTutorToLearningCenter(APIView):
         form = TutorImageForm()
         return render(request, "gallery.html", {"form": form})
 
+class EditUserProfile(APIView):
+    # @login_required (use this if want to make user login first to access this also use: from django.contrib.auth.decorators import login_required)
+    def edit_profile(request):
+        if request.method == 'POST':
+            form = CustomUserForm(request.POST, instance=request.user)
+            if form.is_valid():
+                form.save()
+                return Response(status=status.HTTP_200_OK)
 
 class ViewLearningCenterTutorInformation(APIView):
     def get(self, request, id):
