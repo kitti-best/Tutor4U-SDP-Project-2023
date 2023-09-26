@@ -2,6 +2,7 @@ import http
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from .forms import CustomLearningCenterForm
 from .models import LearningCenter, Student, Tutor, TutorImageForm
 from .serializers import LearningCenterInfoSerializer, LearningCenterStudentsSerializer, LearningCenterTutorSerializer
 from abc import ABC
@@ -35,6 +36,16 @@ class ViewLearningCenterStudentInformation(APIView):
         learning_center = LearningCenterInfoSerializer(learning_center)
         learning_center_student = LearningCenterStudentsSerializer(learning_center)
         return Response(learning_center_student.data, status=status.HTTP_200_OK)
+
+
+class EditLearningCenter(APIView):
+    # @login_required (use this if want to make user login first to access this also use: from django.contrib.auth.decorators import login_required)
+    def edit_learning_center(request):
+        if request.method == 'POST':
+            form = CustomLearningCenterForm(request.POST, instance=request.user)
+            if form.is_valid():
+                form.save()
+                return Response(status=status.HTTP_200_OK)
 
 
 class AddStudentToLearningCenter(APIView):
