@@ -11,7 +11,7 @@ class LearningCenterInfoSerializer(serializers.ModelSerializer):
 class LearningCenterStudentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearningCenter
-        fields = ('students',)
+        fields = '__all__'
 
 
 class LearningCenterTutorSerializer(serializers.ModelSerializer):
