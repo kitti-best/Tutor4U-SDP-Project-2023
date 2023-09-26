@@ -2,19 +2,19 @@ from rest_framework import serializers
 from .models import LearningCenter, Tutor
 
 
-class LearningCenterSerializer(serializers.ModelSerializer):
+class LearningCenterInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearningCenter
-        fields = '__all__'
+        exclude = ('_uuid', 'owner')
 
 
-class LearningCenterStudentSerializer(serializers.ModelSerializer):
+class LearningCenterStudentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearningCenter
-        fields = ('students')
+        fields = ('students',)
 
 
-class TutorSerializer(serializers.ModelSerializer):
+class LearningCenterTutorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tutor
-        fields = '__all__'
+        fields = ('tutors',)

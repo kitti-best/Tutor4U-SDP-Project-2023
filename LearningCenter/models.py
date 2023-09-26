@@ -36,6 +36,7 @@ class LearningCenter(models.Model):
         ('reject', 'reject')
     )
     status = models.CharField(max_length=20, choices=LC_STATUS, editable=False, default='waiting')
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.name}"
