@@ -25,9 +25,18 @@ class Index(APIView):
 
 class ViewLearningCenterInformation(APIView):
     def get(self, request, name):
+        # get LC object
         learning_center = get_object_or_404(LearningCenter, name=name)
-        learning_center = LearningCenterInfoSerializer(learning_center)
-        return Response(learning_center.data, status=status.HTTP_200_OK)
+        # serialize it to be json
+        learning_center_data = LearningCenterInfoSerializer(learning_center).data
+        # use LC id to get accord tutor
+        learning_center_id = learning_center_data['_uuid']
+        # get tutor object
+        tutors = Tutor.objects.filter(learning_center=learning_center_id).values()
+        # add tutors to response
+        learning_center_data['tutors'] = tutors
+
+        return Response(learning_center_data, status=status.HTTP_200_OK)
 
 
 class ViewLearningCenterStudentInformation(APIView):
@@ -105,13 +114,6 @@ class AddTutorToLearningCenter(APIView):
     def get(self, request):
         form = TutorImageForm()
         return render(request, "gallery.html", {"form": form})
-
-
-class ViewLearningCenterTutorInformation(APIView):
-    def get(self, request, id):
-        learning_center = get_object_or_404(LearningCenter, _uuid=id)
-        learning_center_tutor = LearningCenterStudentsSerializer(learning_center)
-        return Response(learning_center_tutor.data, status=status.HTTP_200_OK)
 
 
 class ManageLearningCenter(APIView):

@@ -5,7 +5,7 @@ from .models import LearningCenter, Tutor
 class LearningCenterInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearningCenter
-        exclude = ('_uuid', 'owner')
+        fields = '__all__'
 
 
 class LearningCenterStudentsSerializer(serializers.ModelSerializer):
