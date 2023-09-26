@@ -50,7 +50,7 @@ class LearningCenter(models.Model):
 
 class Student(models.Model):
     student_id = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
-    name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
+    name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=False)
     description = models.TextField()
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
     profile = models.ImageField(upload_to='student_pictures/', height_field=None, width_field=None, max_length=100)
@@ -58,7 +58,7 @@ class Student(models.Model):
 
 class Tutor(models.Model):
     tutor_id = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
-    name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
+    name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=False)
     description = models.TextField()
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
     profile = models.ImageField(upload_to='tutor_pictures/', height_field=None, width_field=None, max_length=100)
