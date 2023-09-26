@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hotel_image</title>
+</head>
+<body>
+    {% for tutor in tutors %}
+        {{ tutor.name }} <br>
+        {{ tutor.profile.url }} <br>
+        <img src="{{ tutor.profile.url }}" alt="img" width="500"> <br>
+    {% endfor %}
+    <img src="media/tutor_pictures/25494.jpg" alt="img" width=500>
+</body>
+</html>
