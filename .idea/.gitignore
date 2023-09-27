@@ -3,3 +3,5 @@
 /workspace.xml
 
 .env
+migrations/
+__pycache__/
