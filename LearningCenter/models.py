@@ -21,7 +21,7 @@ class LearningCenter(models.Model):
     _uuid = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
     profile_picture_url = models.CharField(max_length=255, blank=True, null=True)
-    description = models.TextField()
+    description = models.TextField(max_length=200, blank=True)
     latitude = models.FloatField(max_length=15, default=0)
     longtitude = models.FloatField(max_length=15, default=0)
     location = models.OneToOneField(Location, on_delete=models.CASCADE, null=True)
@@ -30,8 +30,25 @@ class LearningCenter(models.Model):
     email = models.EmailField(blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey(UserModel, on_delete=models.CASCADE)  # The user who owns the learning center
-    subjects_taught = ArrayField(models.CharField(max_length=255, blank=False))
-    levels = ArrayField(models.CharField(max_length=255, blank=False))
+    SUBJECT_CHOICES = (
+        ("Biology", "Biology"),
+        ("Chemistry", "Chemistry"),
+        ("Foreign language", "Foreign language"),
+        ("Math", "Math"),
+        ("Physics", "Physics"),
+        ("Programming", "Programming"),
+        ("Science", "Science"),
+        ("Social studies", "Social studies"),
+        ("Thai language", "Thai language"),
+    )
+    subjects_taught = ArrayField(models.CharField(max_length=255, blank=False, choices=SUBJECT_CHOICES))
+    LEVEL_CHOICES = (
+        ("college", "college"),
+        ("junior high school", "junior high school"),
+        ("kindergarten", "kindergarten"),
+        ("primary", "primary"),
+        ("senior high school", "senior high school"),
+    )
     popularity = models.FloatField(max_length=15, default=0)
     LC_STATUS = (
         ('waiting', 'waiting'),

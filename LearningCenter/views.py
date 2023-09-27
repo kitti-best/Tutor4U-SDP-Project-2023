@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import LearningCenter
+from .models import LearningCenter, Location
 from .serializers import LearningCenterSerializer
 from abc import ABC, abstractmethod
 from django.db.models import Q
@@ -72,7 +72,7 @@ class SearchLearningCenter(APIView, ABC):
 
         query &= Q(status="approve")
 
-        queryset = LearningCenter.objects.filter(query).order_by("-popularity")
+        queryset = LearningCenter.objects.filter(query).order_by("-rating")
 
         return queryset
 
@@ -111,10 +111,11 @@ class LearningCenterDistanceFilter(APIView):
 
     def vector_distance(self, lat1, lon1, lat2, lon2):
         earth_radius = 6371.0
-        lat1_rad = lat1 * (3.14159265358979323846 / 180.0)
-        lon1_rad = lon1 * (3.14159265358979323846 / 180.0)
-        lat2_rad = lat2 * (3.14159265358979323846 / 180.0)
-        lon2_rad = lon2 * (3.14159265358979323846 / 180.0)
+        constant_pi = math.pi
+        lat1_rad = lat1 * (constant_pi / 180.0)
+        lon1_rad = lon1 * (constant_pi / 180.0)
+        lat2_rad = lat2 * (constant_pi / 180.0)
+        lon2_rad = lon2 * (constant_pi / 180.0)
 
         d_lat = lat2_rad - lat1_rad
         d_lon = lon2_rad - lon1_rad
@@ -150,8 +151,6 @@ class ChangeLearningCenterStatus(APIView):
             return Response({"message": "status updated"})
         return Response({"message": "failed to update"})
 
-from django.http import JsonResponse
-from .models import Location
 class ManageLocation(APIView):
     def post(self, request, learning_center_name):
         try:
@@ -163,9 +162,9 @@ class ManageLocation(APIView):
             learning_center.location = location
             learning_center.save()
 
-            return JsonResponse({"message": "Location created and associated with Learning Center."})
+            return Response({"message": "Location created and associated with Learning Center."})
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, learning_center_name):
         try:
@@ -174,11 +173,11 @@ class ManageLocation(APIView):
             if learning_center.location:
                 learning_center.location.save()
 
-                return JsonResponse({"message": "Location for Learning Center updated."})
+                return Response({"message": "Location for Learning Center updated."})
             else:
-                return JsonResponse({"error": "Learning Center does not have an associated location."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Learning Center does not have an associated location."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, learning_center_name):
         try:
@@ -190,8 +189,8 @@ class ManageLocation(APIView):
                 learning_center.location = None
                 learning_center.save()
 
-                return JsonResponse({"message": "Location for Learning Center deleted."})
+                return Response({"message": "Location for Learning Center deleted."})
             else:
-                return JsonResponse({"error": "Learning Center does not have an associated location."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Learning Center does not have an associated location."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
