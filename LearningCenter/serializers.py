@@ -1,20 +1,20 @@
 from rest_framework import serializers
-from .models import LearningCenter
+from .models import LearningCenter, Tutor
 
 
-class LearningCenterSerializer(serializers.ModelSerializer):
+class LearningCenterInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearningCenter
         fields = '__all__'
 
 
-class LearningCenterStudentSerializer(serializers.ModelSerializer):
+class LearningCenterStudentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = LearningCenter
-        fields = ('students')
+        fields = '__all__'
 
 
 class LearningCenterTutorSerializer(serializers.ModelSerializer):
     class Meta:
-        model = LearningCenter
-        fields = ('tutor')
+        model = Tutor
+        fields = '__all__'

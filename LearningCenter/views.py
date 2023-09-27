@@ -1,37 +1,85 @@
-from rest_framework.permissions import IsAuthenticated
+import http
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from .forms import CustomLearningCenterForm
 from .models import LearningCenter, Student, Tutor, TutorImageForm
-from .serializers import LearningCenterSerializer, LearningCenterStudentSerializer
-from abc import ABC, abstractmethod
+from .serializers import LearningCenterInfoSerializer, LearningCenterStudentsSerializer, LearningCenterTutorSerializer
+from abc import ABC
 from django.db.models import Q
-from django.shortcuts import get_object_or_404, render
-from django.contrib.auth.models import Permission
-from django.contrib.auth.decorators import permission_required
+from django.shortcuts import render
 from django.shortcuts import get_object_or_404
+
+
+class Index(APIView):
+    def get(self, request):
+        tutors_data = []
+        tutors = Tutor.objects.all()
+
+        for tutor in tutors:
+            tutor_data = LearningCenterTutorSerializer(tutor).data
+            tutors_data.append(tutor_data)
+
+        return render(request, 'view_images.html', {"tutors": tutors})
 
 
 class ViewLearningCenterInformation(APIView):
     def get(self, request, name):
+        # get LC object
         learning_center = get_object_or_404(LearningCenter, name=name)
-        learning_center = LearningCenterSerializer(learning_center)
-        return Response(learning_center.data, status=status.HTTP_200_OK)
+        # serialize it to be json
+        learning_center_data = LearningCenterInfoSerializer(learning_center).data
+        # use LC id to get accord tutor
+        learning_center_id = learning_center_data['_uuid']
+        # get tutor object
+        tutors = Tutor.objects.filter(learning_center=learning_center_id).values()
+        # add tutors to response
+        learning_center_data['tutors'] = tutors
+
+        return Response(learning_center_data, status=status.HTTP_200_OK)
 
 
 class ViewLearningCenterStudentInformation(APIView):
-    def get(self, request, id):
-        learning_center = get_object_or_404(LearningCenter, _uuid=id)
-        learning_center = LearningCenterSerializer(learning_center)
-        learning_center_student = LearningCenterStudentSerializer(learning_center)
+    def get(self, request, name):
+        learning_center = get_object_or_404(LearningCenter, name=name)
+        learning_center = LearningCenterInfoSerializer(learning_center)
+        learning_center_student = LearningCenterStudentsSerializer(learning_center)
         return Response(learning_center_student.data, status=status.HTTP_200_OK)
 
 
+class EditLearningCenter(APIView):
+    # @login_required (use this if want to make user login first to access this also use: from django.contrib.auth.decorators import login_required)
+    def edit_learning_center(request):
+        if request.method == 'POST':
+            form = CustomLearningCenterForm(request.POST, instance=request.user)
+            if form.is_valid():
+                form.save()
+                return Response(status=status.HTTP_200_OK)
+
+
 class AddStudentToLearningCenter(APIView):
-    # permission_classes = (IsAuthenticated,)
     def post(self, request):
-        data = request.data
-        new_student = Student(**data)
+        data: dict = request.data
+        # django append _id for foreignkey column
+        # So we will remove the old one and replace with ones with _id instead
+        learning_center_id = data['learning_center']
+
+        # learning_center = LearningCenter.objects.filter(_uuid=learning_center_id)
+        # owner_id = learning_center.get()
+        # if owner_id != request.user.id
+
+        data['learning_center_id'] = learning_center_id
+
+        # remove unwanted key
+        data.pop('learning_center')
+        data.pop('csrfmiddlewaretoken')
+
+        # change query object to normal dictionary
+        data_as_dict = {}
+        # dict is mutable so this work
+        [data_as_dict.update({key: val}) for key, val in data.items()]
+
+        new_student = Student(**data_as_dict)
         new_student.save()
         return Response(status=status.HTTP_200_OK)
 
@@ -39,10 +87,15 @@ class AddStudentToLearningCenter(APIView):
 class AddTutorToLearningCenter(APIView):
     def post(self, request):
         data: dict = request.data
-
+        print(data)
         # django append _id for foreignkey column
         # So we will remove the old one and replace with ones with _id instead
         learning_center_id = data['learning_center']
+        user = request.user
+        learning_center = LearningCenter(_uuid=learning_center_id)
+        if user._uuid != learning_center.owner:
+            return Response(status=http.HTTPStatus.UNAUTHORIZED)
+
         data['learning_center_id'] = learning_center_id
 
         # remove unwanted key
@@ -63,16 +116,9 @@ class AddTutorToLearningCenter(APIView):
         return render(request, "gallery.html", {"form": form})
 
 
-class ViewLearningCenterTutorInformation(APIView):
-    def get(self, request, id):
-        learning_center = get_object_or_404(LearningCenter, _uuid=id)
-        learning_center_tutor = LearningCenterStudentSerializer(learning_center)
-        return Response(learning_center_tutor.data, status=status.HTTP_200_OK)
-
-
 class ManageLearningCenter(APIView):
     def post(self, request):
-        serializer = LearningCenterSerializer(data=request.data)
+        serializer = LearningCenterInfoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -86,7 +132,7 @@ class SearchLearningCenter(APIView, ABC):
         subjects_taught = self.request.query_params.get('subjects_taught', '').split(',')
 
         result_learning_centers = self.search_learning_centers(name, levels, subjects_taught)
-        serializer = LearningCenterSerializer(result_learning_centers, many=True)
+        serializer = LearningCenterInfoSerializer(result_learning_centers, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -120,7 +166,7 @@ class LearningCenterDefaultPendingPage(APIView):
 
         try:
             result = LearningCenter.objects.filter(status='waiting').order_by('date_created')
-            serializer = LearningCenterSerializer(result, many=True)
+            serializer = LearningCenterInfoSerializer(result, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except:
             return Response(

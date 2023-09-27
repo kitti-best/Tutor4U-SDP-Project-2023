@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import JsonResponse
 from abc import ABC
+from .forms import CustomUserForm
 from .models import UserModel
 from .serializer import UserModelSerializer
 
@@ -16,6 +17,16 @@ class ViewSelfProfile(APIView, ABC):
         user = request.user
         user = UserModelSerializer(user)
         return JsonResponse(user.data, status=status.HTTP_200_OK)
+
+
+class EditUserProfile(APIView):
+    # @login_required (use this if want to make user login first to access this also use: from django.contrib.auth.decorators import login_required)
+    def edit_profile(request):
+        if request.method == 'POST':
+            form = CustomUserForm(request.POST, instance=request.user)
+            if form.is_valid():
+                form.save()
+                return Response(status=status.HTTP_200_OK)
 
 
 class Index(APIView, ABC):

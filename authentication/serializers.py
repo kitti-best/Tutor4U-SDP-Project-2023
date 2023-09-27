@@ -88,10 +88,10 @@ class LoginSerializer(serializers.Serializer):
             email = validated_data.get('email', None)
             username = validated_data.get('username', None)
             password = validated_data.get('password', None)
-
+            print(email, username, password)
             user = UserModel.objects.filter(
                 Q(email=email) | Q(username=username)).first()
-
+            print(user)
             if (user is None or not user.check_password(password)):
                 raise AuthenticationFailed({'message': 'User or password invalid'})
             if (not user.is_active):

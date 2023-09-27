@@ -12,6 +12,7 @@ from django.template.loader import render_to_string
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.conf import settings
 
 from User.models import UserModel
 from authentication.serializers import pwd_validator
@@ -180,7 +181,7 @@ class LoginAPIViews(LoginBase):
             key='refresh_token', 
             value=refresh_token, 
             httponly=True, 
-            secure =(env('NODE_ENV') == 'production')
+            secure=(not settings.DEBUG)
         )
         return response
 

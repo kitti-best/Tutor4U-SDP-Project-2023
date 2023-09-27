@@ -36,6 +36,7 @@ class LearningCenter(models.Model):
         ('reject', 'reject')
     )
     status = models.CharField(max_length=20, choices=LC_STATUS, editable=False, default='waiting')
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.name}"
@@ -52,7 +53,7 @@ class Student(models.Model):
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
     description = models.TextField()
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
-    profile = models.ImageField(upload_to='student_pictures', height_field=None, width_field=None, max_length=100)
+    profile = models.ImageField(upload_to='student_pictures/', height_field=None, width_field=None, max_length=100)
 
 
 class Tutor(models.Model):
@@ -60,7 +61,7 @@ class Tutor(models.Model):
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
     description = models.TextField()
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
-    profile = models.ImageField(upload_to='tutor_pictures', height_field=None, width_field=None, max_length=100)
+    profile = models.ImageField(upload_to='tutor_pictures/', height_field=None, width_field=None, max_length=100)
 
 
 class TutorImageForm(forms.Form):
