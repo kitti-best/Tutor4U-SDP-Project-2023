@@ -24,11 +24,20 @@ class Index(APIView):
 
 
 class ViewLearningCenterInformation(APIView):
-    def get(self, request, name):
+    def get(self, request, lcid):
         # get LC object
-        learning_center = get_object_or_404(LearningCenter, name=name)
+        learning_center = get_object_or_404(LearningCenter, _uuid=lcid)
         # serialize it to be json
         learning_center_data = LearningCenterInfoSerializer(learning_center).data
+        try:
+            learning_center_data['subject_thumbnails'] = {}
+            learning_center_subjects = learning_center_data.get['subjects_taught']
+            for subject in learning_center_subjects:
+                subject_thumbnail_url = f'https://github.com/Roshanen/muda/blob/main/subject_img/{subject}.png'
+                learning_center_data['subject_thumbnails'][subject] = subject_thumbnail_url
+        except KeyError:
+            return Response(learning_center_data, status=status.HTTP_404_NOT_FOUND)
+
         # use LC id to get accord tutor
         learning_center_id = learning_center_data['_uuid']
         # get tutor object
