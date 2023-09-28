@@ -2,6 +2,7 @@
 /shelf/
 /workspace.xml
 # From PyCharm
+.idea/
 # Unnecessary Files and Folders in Dev
 .env
 migrations/
