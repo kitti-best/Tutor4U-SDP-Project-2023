@@ -1,4 +1,6 @@
 from pathlib import Path
+
+import django_heroku
 import environ
 from datetime import timedelta
 import os
@@ -196,8 +198,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
-MEDIA_URL = '/media/'
 
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Default primary key field type
@@ -215,3 +217,5 @@ EMAIL_HOST_USER = 'cakswatreuxngxram@gmail.com'
 EMAIL_HOST_PASSWORD = 'jffvhcsjfpnutkso'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+
+django_heroku.settings(locals())
