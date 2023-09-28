@@ -20,7 +20,7 @@ class Index(APIView):
             tutor_data = LearningCenterTutorSerializer(tutor).data
             tutors_data.append(tutor_data)
 
-        return render(request, 'view_images.html', {"tutors": tutors})
+        return '''render(request, 'view_images.html', {"tutors": tutors})'''
 
 
 class ViewLearningCenterInformation(APIView):
