@@ -1,0 +1,1 @@
+web gunicorn kmitl-sdp-project-0081.wsgi:application --log-file -
