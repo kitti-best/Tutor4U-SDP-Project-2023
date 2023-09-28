@@ -1,1 +1,1 @@
-web gunicorn kmitl-sdp-project-0081.wsgi:application --log-file -
+web gunicorn KMITLWebAppClassProject.wsgi:application --log-file -
