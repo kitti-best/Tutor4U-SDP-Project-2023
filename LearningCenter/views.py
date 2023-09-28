@@ -24,9 +24,9 @@ class Index(APIView):
 
 
 class ViewLearningCenterInformation(APIView):
-    def get(self, request, name):
+    def get(self, request, lcid):
         # get LC object
-        learning_center = get_object_or_404(LearningCenter, name=name)
+        learning_center = get_object_or_404(LearningCenter, _uuid=lcid)
         # serialize it to be json
         learning_center_data = LearningCenterInfoSerializer(learning_center).data
         # use LC id to get accord tutor
