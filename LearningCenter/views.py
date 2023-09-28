@@ -90,7 +90,10 @@ class AddTutorToLearningCenter(APIView):
         print(data)
         # django append _id for foreignkey column
         # So we will remove the old one and replace with ones with _id instead
-        learning_center_id = data['learning_center']
+        learning_center_id = data.get('learning_center')
+        if learning_center_id is None:
+            return Response(status=http.HTTPStatus.NOT_FOUND)
+
         user = request.user
         learning_center = LearningCenter(_uuid=learning_center_id)
         if user._uuid != learning_center.owner:
