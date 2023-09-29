@@ -22,13 +22,33 @@ class Index(APIView):
 
         return render(request, 'view_images.html', {"tutors": tutors})
 
-
 class ViewLearningCenterInformation(APIView):
-    def get(self, request, name):
+    url_table = {
+        'Math': 'math', 
+        'Chemistry': 'chemistry',
+        'Biology': 'biology', 
+        'Thai language': 'thai',
+        'Social studies' : 'socials',
+        'Foreign language' : 'foreign',
+        'Programming' : 'programming',
+        'Physics' : 'physics'
+    }
+    
+    def get(self, request, lcid):
         # get LC object
-        learning_center = get_object_or_404(LearningCenter, name=name)
+        learning_center = get_object_or_404(LearningCenter, _uuid=lcid)
         # serialize it to be json
         learning_center_data = LearningCenterInfoSerializer(learning_center).data
+        try:
+            learning_center_data['subject_thumbnails'] = {}
+            learning_center_subjects = learning_center_data.get('subjects_taught')
+            for subject in learning_center_subjects:
+                url = self.url_table.get(subject, 'default')
+                subject_thumbnail_url = f'https://github.com/Roshanen/muda/blob/main/subject_img/{url}.png'
+                learning_center_data['subject_thumbnails'][subject] = subject_thumbnail_url
+        except KeyError:
+            return Response(learning_center_data, status=status.HTTP_404_NOT_FOUND)
+
         # use LC id to get accord tutor
         learning_center_id = learning_center_data['_uuid']
         # get tutor object
@@ -87,14 +107,13 @@ class AddStudentToLearningCenter(APIView):
 class AddTutorToLearningCenter(APIView):
     def post(self, request):
         data: dict = request.data
-        print(data)
         # django append _id for foreignkey column
         # So we will remove the old one and replace with ones with _id instead
         learning_center_id = data['learning_center']
         user = request.user
         learning_center = LearningCenter(_uuid=learning_center_id)
-        if user._uuid != learning_center.owner:
-            return Response(status=http.HTTPStatus.UNAUTHORIZED)
+        # if user._uuid != learning_center.owner:
+        #     return Response(status=http.HTTPStatus.UNAUTHORIZED)
 
         data['learning_center_id'] = learning_center_id
 

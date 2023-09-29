@@ -19,7 +19,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('NODE_ENV') == "dev"
 
 ALLOWED_HOSTS = [
-    '127.0.0.1'
+    
 ]
 
 

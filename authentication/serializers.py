@@ -96,7 +96,7 @@ class LoginSerializer(serializers.Serializer):
                 raise AuthenticationFailed({'message': 'User or password invalid'})
             if (not user.is_active):
                 raise AuthenticationFailed(
-                    {'message': 'User are not activate'})
+                    {'message': 'User is not activate'})
             return authenticate(
                 request=request,
                 username=user.username,

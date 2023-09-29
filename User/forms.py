@@ -1,5 +1,5 @@
 from django.contrib.auth.forms import UserChangeForm
-from .models import UserProfile
+from .user_profile_model import UserProfile
 
 
 class CustomUserForm(UserChangeForm):

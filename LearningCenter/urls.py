@@ -8,7 +8,7 @@ urlpatterns = [
     path("add_student", views.AddStudentToLearningCenter.as_view(), name="add_student"),
     path("add_tutor", views.AddTutorToLearningCenter.as_view(), name="add_tutor"),
 
-    path("view/<name>", views.ViewLearningCenterInformation.as_view(), name="view"),
+    path("view/<lcid>", views.ViewLearningCenterInformation.as_view(), name="view"),
     path('create/', views.ManageLearningCenter.as_view(), name='manage-learning-center'),
 
     path('change-status/', views.ChangeLearningCenterStatus.as_view()),

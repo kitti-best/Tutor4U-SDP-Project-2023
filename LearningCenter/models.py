@@ -10,6 +10,7 @@ import uuid
 class LearningCenter(models.Model):
     _uuid = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
     name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
+    thumbnail = models.CharField(max_length=255, default='https://t4.ftcdn.net/jpg/04/70/29/87/360_F_470298738_1eHqTZ0B5AvB3emaESPpvQ93227y7P0l.jpg')
     description = models.TextField()
     latitude = models.FloatField(max_length=15, default=0)
     longtitude = models.FloatField(max_length=15, default=0)
@@ -28,8 +29,6 @@ class LearningCenter(models.Model):
     subjects_taught = ArrayField(models.CharField(max_length=255, blank=False))
     levels = ArrayField(models.CharField(max_length=255, blank=False))
     popularity = models.FloatField(max_length=15, default=0)
-    subjects_taught = ArrayField(models.CharField(max_length=255, blank=False))
-    popularity = models.IntegerField(default=0)
     LC_STATUS = (
         ('waiting', 'waiting'),
         ('approve', 'approve'),
