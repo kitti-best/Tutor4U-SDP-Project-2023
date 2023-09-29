@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import environ
 from datetime import timedelta
 import os
@@ -19,7 +20,6 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('NODE_ENV') == "dev"
 
 ALLOWED_HOSTS = [
-    
 ]
 
 
@@ -196,8 +196,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
-MEDIA_URL = '/media/'
 
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Default primary key field type

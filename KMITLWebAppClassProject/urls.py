@@ -7,7 +7,7 @@ from KMITLWebAppClassProject import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include("authentication.urls")),
-    path('feed/', include("LearningCenter.urls")),
+    path('/', include("LearningCenter.urls")),
     path('learning_center/', include("LearningCenter.urls")),
     path('learning_center_admin/', include("LearningCenterAdmin.urls")),
     path('master_admin/', include("MasterAdmin.urls")),

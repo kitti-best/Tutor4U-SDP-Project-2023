@@ -1,0 +1,1 @@
+web: gunicorn KMITLWebAppClassProject.wsgi:application --log-file -

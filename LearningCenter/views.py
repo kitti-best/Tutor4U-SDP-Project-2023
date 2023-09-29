@@ -20,7 +20,7 @@ class Index(APIView):
             tutor_data = LearningCenterTutorSerializer(tutor).data
             tutors_data.append(tutor_data)
 
-        return render(request, 'view_images.html', {"tutors": tutors})
+        return '''render(request, 'view_images.html', {"tutors": tutors})'''
 
 class ViewLearningCenterInformation(APIView):
     url_table = {
@@ -33,7 +33,6 @@ class ViewLearningCenterInformation(APIView):
         'Programming' : 'programming',
         'Physics' : 'physics'
     }
-    
     def get(self, request, lcid):
         # get LC object
         learning_center = get_object_or_404(LearningCenter, _uuid=lcid)
@@ -109,7 +108,10 @@ class AddTutorToLearningCenter(APIView):
         data: dict = request.data
         # django append _id for foreignkey column
         # So we will remove the old one and replace with ones with _id instead
-        learning_center_id = data['learning_center']
+        learning_center_id = data.get('learning_center')
+        if learning_center_id is None:
+            return Response(status=http.HTTPStatus.NOT_FOUND)
+
         user = request.user
         learning_center = LearningCenter(_uuid=learning_center_id)
         # if user._uuid != learning_center.owner:
