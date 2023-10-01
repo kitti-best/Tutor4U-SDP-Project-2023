@@ -12,7 +12,6 @@ from User.models import UserModel
 from Profiles.models import Profiles
 
 from utils.token_manager import TokenManager
-from uuid import UUID
 
 
 pwd_validator = PasswordCharacterValidator(
