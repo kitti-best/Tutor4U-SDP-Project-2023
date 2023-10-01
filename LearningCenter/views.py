@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .forms import CustomLearningCenterForm
 from .models import LearningCenter, Student, Tutor, TutorImageForm
+from Images.models import Images
 from .serializers import LearningCenterInfoSerializer, LearningCenterStudentsSerializer, LearningCenterTutorSerializer
 from abc import ABC
 from django.db.models import Q
@@ -36,8 +37,6 @@ class ViewLearningCenterInformation(APIView):
         'Physics' : 'physics'
     }
     serializer_class = LearningCenterInfoSerializer
-    
-    
     def get(self, request, lcid):
         try:
             lcid = UUID(lcid, version=4)
@@ -239,3 +238,25 @@ class ChangeLearningCenterStatus(APIView):
             {'message': 'cannot find learning center with this name'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class LearningCenterInteriorView(APIView):
+    
+    def patch(self, request):
+        data = request.data
+        lc_id = data.get('learning_center_id', None)
+        upload_image = request.FILES.get('image', None)
+        if lc_id is None or upload_image is None:
+            return Response({ 'message': 'Invalid data' }, status=status.HTTP_400_BAD_REQUEST)
+        image = Images(image_file=upload_image)
+        image.save()
+        return Response({ 'message': 'success' }, status=status.HTTP_201_CREATED)
+
+    def delete(self, request):
+        data = request.data
+        image_id = data.get('image_id', None)
+        if image_id is None:
+            return Response({ 'message': 'Invalid data' }, status=status.HTTP_400_BAD_REQUEST)
+        image = Images.objects.filter(image_id=image_id).first()
+        image.delete()
+        return Response({ 'message': 'success' }, status=status.HTTP_200_OK)
