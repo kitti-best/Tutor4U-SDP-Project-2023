@@ -246,7 +246,10 @@ class LearningCenterInteriorView(APIView):
         data = request.data
         lc_id = data.get('learning_center_id', None)
         upload_image = request.FILES.get('image', None)
-        if lc_id is None or upload_image is None:
+        if (lc_id is None or 
+            upload_image is None or 
+            not upload_image.__dict__.get('content_type').startswith('image/')
+            ):
             return Response({ 'message': 'Invalid data' }, status=status.HTTP_400_BAD_REQUEST)
         image = Images(image_file=upload_image)
         image.save()
