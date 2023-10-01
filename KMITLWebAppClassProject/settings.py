@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import django_heroku
 import environ
 from datetime import timedelta
 import os
@@ -18,11 +17,9 @@ environ.Env.read_env()
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = env('NODE_ENV') == "dev"
-DEBUG = False
+DEBUG = env('NODE_ENV') == "dev"
 
 ALLOWED_HOSTS = [
-    '*'
 ]
 
 
@@ -218,5 +215,3 @@ EMAIL_HOST_USER = 'cakswatreuxngxram@gmail.com'
 EMAIL_HOST_PASSWORD = 'jffvhcsjfpnutkso'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-
-django_heroku.settings(locals())
