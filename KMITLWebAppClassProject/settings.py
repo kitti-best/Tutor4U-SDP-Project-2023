@@ -20,6 +20,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('NODE_ENV') == "dev"
 
 ALLOWED_HOSTS = [
+    env('HOST')
 ]
 
 
@@ -41,7 +42,10 @@ INSTALLED_APPS = [
     'authentication', 
     'LearningCenter',
     'User',
-    'utils',
+    'utils', 
+    'Locations', 
+    'Images',
+    'Profiles', 
 ]
 
 MIDDLEWARE = [
@@ -91,8 +95,8 @@ SIMPLE_JWT = {
 
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
-    "USER_ID_FIELD": "_uuid",
-    "USER_ID_CLAIM": "_uuid",
+    "USER_ID_FIELD": "user_id",
+    "USER_ID_CLAIM": "user_id",
     "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",
 
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),

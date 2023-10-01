@@ -9,8 +9,10 @@ from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
 
 from User.models import UserModel
+from Profiles.models import Profiles
 
 from utils.token_manager import TokenManager
+from uuid import UUID
 
 
 pwd_validator = PasswordCharacterValidator(
@@ -27,25 +29,36 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserModel
-        fields = ('__all__')
+        fields = ('username', 'password', 'email')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data: dict):
         try:
             password = validated_data.get('password', None)
             pwd_validator.validate(password)
-
+            
+            firstname = validated_data.get('firstname', None)
+            lastname = validated_data.get('lastname', None)
+            if not(firstname or lastname):
+                raise ValidationError()
+            
+            profile = Profiles(
+                firstname=firstname, 
+                lastname=lastname
+            )
+            
             user = self.Meta.model(
                 email=validated_data.get('email', None), 
                 username=validated_data.get('username', None), 
-                first_name=validated_data.get('first_name', None), 
-                last_name=validated_data.get('last_name', None), 
+                profile_id=profile.profile_id
             )
             user.set_password(password)
+            profile.save()
             user.save()
 
             return user
-        except ValidationError:
+        except ValidationError as error:
+            print(error)
             return
 
 
@@ -66,13 +79,13 @@ class LogoutAllSerializer(serializers.Serializer):
                 raise NotAuthenticated(
                     {'message': 'Token is invalid or expired'})
 
-            _uuid = token_data.get('_uuid', None)
-            user = UserModel.objects.filter(_uuid=_uuid).first()
+            user_id = token_data.get('user_id', None)
+            user = UserModel.objects.filter(user_id=user_id).first()
 
             if (user is None):
                 raise NotAuthenticated({'message': 'User not found'})
 
-            tokens = OutstandingToken.objects.filter(user=user._uuid)
+            tokens = OutstandingToken.objects.filter(user=user.user_id)
             for token in tokens:
                 t, _ = BlacklistedToken.objects.get_or_create(token=token)
 
@@ -88,10 +101,8 @@ class LoginSerializer(serializers.Serializer):
             email = validated_data.get('email', None)
             username = validated_data.get('username', None)
             password = validated_data.get('password', None)
-            print(email, username, password)
             user = UserModel.objects.filter(
                 Q(email=email) | Q(username=username)).first()
-            print(user)
             if (user is None or not user.check_password(password)):
                 raise AuthenticationFailed({'message': 'User or password invalid'})
             if (not user.is_active):
@@ -110,5 +121,5 @@ class TokenGenaratorSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token['_uuid'] = user._uuid.hex
+        token['user_id'] = user.user_id.hex
         return token

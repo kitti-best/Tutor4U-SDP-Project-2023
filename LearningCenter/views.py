@@ -9,6 +9,7 @@ from abc import ABC
 from django.db.models import Q
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
+from uuid import UUID
 
 
 class Index(APIView):
@@ -22,6 +23,7 @@ class Index(APIView):
 
         return '''render(request, 'view_images.html', {"tutors": tutors})'''
 
+
 class ViewLearningCenterInformation(APIView):
     url_table = {
         'Math': 'math', 
@@ -33,34 +35,37 @@ class ViewLearningCenterInformation(APIView):
         'Programming' : 'programming',
         'Physics' : 'physics'
     }
+    serializer_class = LearningCenterInfoSerializer
+    
+    
     def get(self, request, lcid):
-        # get LC object
-        learning_center = get_object_or_404(LearningCenter, _uuid=lcid)
-        # serialize it to be json
-        learning_center_data = LearningCenterInfoSerializer(learning_center).data
         try:
-            learning_center_data['subject_thumbnails'] = {}
-            learning_center_subjects = learning_center_data.get('subjects_taught')
-            for subject in learning_center_subjects:
-                url = self.url_table.get(subject, 'default')
-                subject_thumbnail_url = f'https://github.com/Roshanen/muda/blob/main/subject_img/{url}.png'
-                learning_center_data['subject_thumbnails'][subject] = subject_thumbnail_url
-        except KeyError:
-            return Response(learning_center_data, status=status.HTTP_404_NOT_FOUND)
+            lcid = UUID(lcid, version=4)
+        except ValueError:
+            return Response({'message': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        learning_center = get_object_or_404(LearningCenter, learning_center_id=lcid)
+        data = self.serializer_class(learning_center).data
+        # try:
+        #     data['subject_thumbnails'] = {}
+        #     subjects = data.get('subjects_taught')
+        #     for subject in subjects:
+        #         url = self.url_table.get(subject, 'default')
+        #         subject_thumbnail_url = f'https://github.com/Roshanen/muda/blob/main/subject_img/{url}.png'
+        #         data['subject_thumbnails'][subject] = subject_thumbnail_url
+        # except KeyError:
+        #     return Response(data, status=status.HTTP_404_NOT_FOUND)
 
-        # use LC id to get accord tutor
-        learning_center_id = learning_center_data['_uuid']
-        # get tutor object
-        tutors = Tutor.objects.filter(learning_center=learning_center_id).values()
-        # add tutors to response
-        learning_center_data['tutors'] = tutors
+        # learning_center_id = data.get('learning_center_id', None)
+        # tutors = Tutor.objects.filter(learning_center=learning_center_id).values()
+        # data.update({ 'tutors': tutors })
 
-        return Response(learning_center_data, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class ViewLearningCenterStudentInformation(APIView):
-    def get(self, request, name):
-        learning_center = get_object_or_404(LearningCenter, name=name)
+    def get(self, request, learning_center_id):
+        learning_center = get_object_or_404(LearningCenter, learning_center_id=learning_center_id)
         learning_center = LearningCenterInfoSerializer(learning_center)
         learning_center_student = LearningCenterStudentsSerializer(learning_center)
         return Response(learning_center_student.data, status=status.HTTP_200_OK)
@@ -68,12 +73,11 @@ class ViewLearningCenterStudentInformation(APIView):
 
 class EditLearningCenter(APIView):
     # @login_required (use this if want to make user login first to access this also use: from django.contrib.auth.decorators import login_required)
-    def edit_learning_center(request):
-        if request.method == 'POST':
-            form = CustomLearningCenterForm(request.POST, instance=request.user)
-            if form.is_valid():
-                form.save()
-                return Response(status=status.HTTP_200_OK)
+    def post(request):
+        form = CustomLearningCenterForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+        return Response(status=status.HTTP_200_OK)
 
 
 class AddStudentToLearningCenter(APIView):
@@ -83,7 +87,7 @@ class AddStudentToLearningCenter(APIView):
         # So we will remove the old one and replace with ones with _id instead
         learning_center_id = data['learning_center']
 
-        # learning_center = LearningCenter.objects.filter(_uuid=learning_center_id)
+        # learning_center = LearningCenter.objects.filter(learning_center_id=learning_center_id)
         # owner_id = learning_center.get()
         # if owner_id != request.user.id
 
@@ -113,8 +117,8 @@ class AddTutorToLearningCenter(APIView):
             return Response(status=http.HTTPStatus.NOT_FOUND)
 
         user = request.user
-        learning_center = LearningCenter(_uuid=learning_center_id)
-        # if user._uuid != learning_center.owner:
+        learning_center = LearningCenter(learning_center_id=learning_center_id)
+        # if user.user_id != learning_center.owner:
         #     return Response(status=http.HTTPStatus.UNAUTHORIZED)
 
         data['learning_center_id'] = learning_center_id
