@@ -156,7 +156,7 @@ class ViewStudents(APIView):
             profile = Profiles.objects.filter(profile_id=student_json['profile'])[0]
             profile_json = ProfileSerializer(profile).data
             student_list.append(profile_json)
-        return Response({"student": student_list}, status=status.HTTP_200_OK)
+        return Response({"students": student_list}, status=status.HTTP_200_OK)
 
 
 class ViewTutors(APIView):
