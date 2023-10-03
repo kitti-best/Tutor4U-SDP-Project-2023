@@ -5,8 +5,10 @@ from . import views
 urlpatterns = [
     path('', views.Index.as_view(), name='index'),
 
-    path("add_student", views.AddStudentToLearningCenter.as_view(), name="add_student"),
-    path("add_tutor", views.AddTutorToLearningCenter.as_view(), name="add_tutor"),
+    path("add_student", views.AddStudent.as_view(), name="add_student"),
+    path("student/<lcid>", views.ViewStudents.as_view(), name="view_student"),
+    path("tutor/<lcid>", views.ViewTutors.as_view(), name="view_tutor"),
+    path("add_tutor", views.AddTutor.as_view(), name="add_tutor"),
 
     path("view/<lcid>", views.ViewLearningCenterInformation.as_view(), name="view"),
     path('create/', views.ManageLearningCenter.as_view(), name='manage-learning-center'),
@@ -14,4 +16,6 @@ urlpatterns = [
     path('change-status/', views.ChangeLearningCenterStatus.as_view()),
     path('pending-page/', views.LearningCenterDefaultPendingPage.as_view()),
     path('search/', views.SearchLearningCenter.as_view(), name='search-learning-center'),
+    path('upload_interior/', views.LearningCenterInteriorView.as_view(), name='search-learning-center'),
+    path('delete_interior/', views.LearningCenterInteriorView.as_view(), name='search-learning-center'),
 ]

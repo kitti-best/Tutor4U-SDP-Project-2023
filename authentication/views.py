@@ -8,9 +8,9 @@ from django.http import HttpResponseRedirect
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
+from django.utils.decorators import classonlymethod
 from django.template.loader import render_to_string
 from django.contrib.sites.shortcuts import get_current_site
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.conf import settings
 
@@ -20,7 +20,9 @@ from authentication.serializers import pwd_validator
 from .serializers import RegisterSerializer, LoginSerializer, LogoutAllSerializer
 from abc import ABC, abstractmethod
 from utils.token_manager import TokenManager
+from asgiref.sync import sync_to_async
 import environ
+import threading
 
 env = environ.Env()
 environ.Env.read_env()
@@ -37,7 +39,7 @@ class ResetPassword(APIView):
         
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
-            user = UserModel.objects.get(_uuid=uid)
+            user = UserModel.objects.get(user_id=uid)
         except:
             user = None
 
@@ -47,6 +49,7 @@ class ResetPassword(APIView):
             return HttpResponseRedirect(redirect_to=url)
         else: # error
             return HttpResponseRedirect(redirect_to=error_url)
+
 
 class ResetPasswordSender(APIView):
     def post(self, request):
@@ -68,7 +71,7 @@ class ResetPasswordSender(APIView):
             message = render_to_string("reset_password.html", {
                 'username': user.username,
                 'domain': get_current_site(request).domain,
-                'uid': urlsafe_base64_encode(force_bytes(user._uuid)),
+                'uid': urlsafe_base64_encode(force_bytes(user.user_id)),
                 'token': PasswordResetTokenGenerator().make_token(user),
                 "protocol": 'https' if request.is_secure() else 'http'
             })
@@ -87,11 +90,12 @@ class ResetPasswordSender(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+
 class EmailActivation(APIView):
     def post(self, request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
-            user = UserModel.objects.get(_uuid=uid)
+            user = UserModel.objects.get(user_id=uid)
         except:
             user = None
         
@@ -104,12 +108,14 @@ class EmailActivation(APIView):
             error_url = 'https://www.google.com'
             return HttpResponseRedirect(redirect_to=error_url)
 
+
 class RegisterBase(APIView, ABC):
     permission_classes = (AllowAny, )
     
     @abstractmethod
     def post(self):
         raise NotImplementedError()
+
 
 class LoginBase(APIView, ABC):
     permission_classes = (AllowAny, )
@@ -118,20 +124,22 @@ class LoginBase(APIView, ABC):
     def post(self):
         raise NotImplementedError()
 
+
 class EmailRegistrationAPIViews(RegisterBase):
     serializer_class = RegisterSerializer
+
 
     def activateEmail(self, request, user):
         mail_subject = "Activate your user account."
         message = render_to_string("activate_account.html", {
             'username': user.username,
             'domain': get_current_site(request).domain,
-            'uid': urlsafe_base64_encode(force_bytes(user._uuid)),
+            'uid': urlsafe_base64_encode(force_bytes(user.user_id)),
             'token': PasswordResetTokenGenerator().make_token(user),
             "protocol": 'https' if request.is_secure() else 'http'
         })
         
-        email = EmailMessage(mail_subject, message, to=[user.email])
+        email = self.EmailMessage(mail_subject, message, [user.email])
         if not email.send():
             return False
         return True
@@ -144,15 +152,11 @@ class EmailRegistrationAPIViews(RegisterBase):
         
         if (user is None):
             return Response(
-                { 'message': serializer.errors }, 
+                { 'message': 'Invalid data' }, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        if not self.activateEmail(request, user):
-            return Response(
-                { 'message': 'Failed to send email' },
-                status = status.HTTP_503_SERVICE_UNAVAILABLE # I'm not sure what status to return here
-            )
+        self.activateEmail(request, user)
 
         return Response(
                 { 'message': 'success' }, 

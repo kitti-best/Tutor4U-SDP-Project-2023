@@ -29,10 +29,9 @@ class TokenManager:
         token = jwt.decode(
                     input_token, 
                     key=SIMPLE_JWT.get('SIGNING_KEY'), 
-                    algorithm=SIMPLE_JWT.get('ALGORITHM')
+                    algorithms=SIMPLE_JWT.get('ALGORITHM')
                 )
-        
-        expire_date = token.get('expire_date', None)
+        expire_date = token.get('exp', None)
         date_now = int(datetime.utcnow().timestamp())
         if (date_now >= expire_date):
             return None
