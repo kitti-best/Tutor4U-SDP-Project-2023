@@ -9,6 +9,7 @@ import uuid
 
 default_image = Images.get_default_image()
 
+
 class LearningCenter(models.Model):
     learning_center_id = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
     date_created = models.DateTimeField(auto_now_add=True)
@@ -97,9 +98,11 @@ class LearningCenterLevels(models.Model):
 
 
 class TutorImageForm(forms.Form):
-    name = forms.CharField()
+    first_name = forms.CharField()
+    middle_name = forms.CharField(required=False)
+    last_name = forms.CharField()
     description = forms.CharField()
-    profile = forms.ImageField()
+    image = forms.ImageField()
     learning_center = forms.ModelChoiceField(
         queryset=LearningCenter.objects.all()
     )
