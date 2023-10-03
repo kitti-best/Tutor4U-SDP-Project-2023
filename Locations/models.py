@@ -2,7 +2,7 @@ from django.db import models
 import uuid
 
 class Locations(models.Model):
-    locaion_id = models.UUIDField(
+    location_id = models.UUIDField(
         default=uuid.uuid4, 
         db_index=True, 
         editable=False, 
