@@ -2,6 +2,11 @@ import http
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
+from django.db.models import Q
+from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 
 from Profiles.models import Profiles
 from Profiles.serializers import ProfileSerializer
@@ -10,9 +15,6 @@ from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaug
 from Images.models import Images
 from .serializers import LearningCenterInfoSerializer, StudentSerializer, TutorSerializer
 from abc import ABC
-from django.db.models import Q
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
 from uuid import UUID
 
 
@@ -281,23 +283,42 @@ class ChangeLearningCenterStatus(APIView):
 
 
 class LearningCenterInteriorView(APIView):
+    authentication_classes = (IsAuthenticated, )
     
     def patch(self, request):
         data = request.data
         lc_id = data.get('learning_center_id', None)
         upload_image = request.FILES.get('image', None)
-        if (lc_id is None or 
+        user = request.user
+        if (
+            lc_id is None or 
             upload_image is None or 
             not upload_image.__dict__.get('content_type').startswith('image/')
             ):
-            return Response({ 'message': 'Invalid data' }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                { 'message': 'Invalid data' }, 
+                status=status.HTTP_400_BAD_REQUEST
+                )
         
         try:
             lc_id = UUID(lc_id, version=4)
         except ValueError:
-                return Response({'message': 'Invalid UUID'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'message': 'Invalid UUID'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
         
-        learning_center = get_object_or_404(LearningCenter, learning_center_id=lc_id)
+        learning_center = get_object_or_404(
+            LearningCenter, 
+            learning_center_id=lc_id
+            )
+        
+        if user.user_id != learning_center.owner:
+            return Response(
+                { 'message': 'Permission denied' }, 
+                status=status.HTTP_403_FORBIDDEN
+                )
+        
         image = Images(image_file=upload_image)
         interior = LearningCenterInteriors(
             image=image, 
@@ -305,19 +326,46 @@ class LearningCenterInteriorView(APIView):
         )
         image.save()
         interior.save()
-        return Response({ 'message': 'success' }, status=status.HTTP_201_CREATED)
+        return Response(
+            { 'message': 'success' }, 
+            status=status.HTTP_201_CREATED
+            )
 
     def delete(self, request):
         data = request.data
         image_id = data.get('image_id', None)
-        if image_id is None:
-            return Response({ 'message': 'Invalid data' }, status=status.HTTP_400_BAD_REQUEST)
-            
+        lc_id = data.get('learning_center_id', None)
+        user = request.user
+        if image_id is None or lc_id is None:
+            return Response(
+                { 'message': 'Invalid data' }, 
+                status=status.HTTP_400_BAD_REQUEST
+                )
+        
         try:
             image_id = UUID(image_id, version=4)
+            lc_id = UUID(lc_id, version=4)
         except ValueError:
-                return Response({'message': 'Invalid UUID'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'message': 'Invalid UUID'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
         
         image = get_object_or_404(Images, image_id=image_id)
+        learning_center_id = image.learning_center_id
+        learning_center = get_object_or_404(
+            LearningCenter, 
+            learning_center_id=learning_center_id
+            )
+        
+        if (
+            learning_center_id != lc_id or 
+            user.user_id != learning_center.owner
+            ):
+            return Response(
+                { 'message': 'Permission denied' }, 
+                status=status.HTTP_403_FORBIDDEN
+                )
+        
         image.delete()
         return Response({ 'message': 'success' }, status=status.HTTP_200_OK)

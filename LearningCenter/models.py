@@ -11,15 +11,27 @@ default_image = Images.get_default_image()
 
 
 class LearningCenter(models.Model):
-    learning_center_id = models.UUIDField(default=uuid.uuid4, db_index=True, editable=False, primary_key=True, unique=True)
+    learning_center_id = models.UUIDField(
+        default=uuid.uuid4, 
+        db_index=True, 
+        editable=False, 
+        primary_key=True, 
+        unique=True
+        )
     date_created = models.DateTimeField(auto_now_add=True)
-    name = models.CharField(validators=[MinLengthValidator(4)], max_length=150, unique=True)
+    name = models.CharField(
+        validators=[MinLengthValidator(4)], 
+        max_length=150, 
+        unique=True
+        )
     description = models.TextField()
     website = models.URLField(blank=True,  default='', null=True)
     phone = models.CharField(
         max_length=30, 
         default='', 
-        validators=[RegexValidator(regex="((\+66|0)(\d{1,2}\-?\d{3}\-?\d{3,4}))|((\+๖๖|๐)([๐-๙]{1,2}\-?[๐-๙]{3}\-?[๐-๙]{3,4}))")]
+        validators=[RegexValidator(
+            regex="((\+66|0)(\d{1,2}\-?\d{3}\-?\d{3,4}))|((\+๖๖|๐)([๐-๙]{1,2}\-?[๐-๙]{3}\-?[๐-๙]{3,4}))"
+            )]
         )
     email = models.EmailField(blank=True, default='', null=True)
     popularity = models.FloatField(max_length=15, default=0)
@@ -27,7 +39,11 @@ class LearningCenter(models.Model):
     
     owner = models.ForeignKey(UserModel, on_delete=models.CASCADE, null=True)  # The user who owns the learning center
     location = models.ForeignKey(Locations, on_delete=models.SET_NULL, null=True)
-    thumbnail = models.ForeignKey(Images, default=default_image, on_delete=models.SET_DEFAULT)
+    thumbnail = models.ForeignKey(
+        Images, 
+        default=default_image, 
+        on_delete=models.SET_DEFAULT
+        )
     
     LC_STATUS = (
         ('waiting', 'waiting'),
@@ -64,6 +80,16 @@ class Tutor(models.Model):
 
 
 class Subjects(models.Model):
+    subject_table = (
+        ('Math', 'math'),
+        ('Chemistry', 'chemistry'),
+        ('Biology', 'biology'),
+        ('Thai language', 'thai'),
+        ('Social studies', 'socials'),
+        ('Foreign language', 'foreign'),
+        ('Programming', 'programming'),
+        ('Physics', 'physics'),
+    )
     subject_id = models.UUIDField(
         default=uuid.uuid4, 
         db_index=True, 
@@ -71,7 +97,11 @@ class Subjects(models.Model):
         primary_key=True, 
         unique=True
         )
-    subject_name = models.CharField(max_length=255, default='')
+    subject_name = models.CharField(
+        max_length=20, 
+        choices=subject_table, 
+        editable=False, 
+        null=False)
     image = models.ForeignKey(Images, default=default_image, on_delete=models.SET_DEFAULT)
 
 
