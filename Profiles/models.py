@@ -13,18 +13,18 @@ class Profiles(models.Model):
         primary_key=True, 
         unique=True
     )
-    firstname = models.CharField(
+    first_name = models.CharField(
         validators=[MinLengthValidator(4)], 
         max_length=255,
         unique=False
         )
-    middlename= models.CharField(
+    middle_name = models.CharField(
         validators=[MinLengthValidator(4)], 
         max_length=255, 
         unique=False, 
         default=''
         )
-    lastname = models.CharField(
+    last_name = models.CharField(
         validators=[MinLengthValidator(4)], 
         max_length=255, 
         unique=False
