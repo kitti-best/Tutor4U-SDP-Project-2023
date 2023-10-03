@@ -5,8 +5,10 @@ from . import views
 urlpatterns = [
     path('', views.Index.as_view(), name='index'),
 
-    path("add_student", views.AddStudentToLearningCenter.as_view(), name="add_student"),
-    path("add_tutor", views.AddTutorToLearningCenter.as_view(), name="add_tutor"),
+    path("add_student", views.AddStudent.as_view(), name="add_student"),
+    path("student/<lcid>", views.ViewStudents.as_view(), name="view_student"),
+    path("tutor/<lcid>", views.ViewTutors.as_view(), name="view_tutor"),
+    path("add_tutor", views.AddTutor.as_view(), name="add_tutor"),
 
     path("view/<lcid>", views.ViewLearningCenterInformation.as_view(), name="view"),
     path('create/', views.ManageLearningCenter.as_view(), name='manage-learning-center'),

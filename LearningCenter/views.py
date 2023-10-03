@@ -2,10 +2,13 @@ import http
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
+from Profiles.models import Profiles
+from Profiles.serializers import ProfileSerializer
 from .forms import CustomLearningCenterForm
-from .models import LearningCenter, Student, Tutor, TutorImageForm
+from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught
 from Images.models import Images
-from .serializers import LearningCenterInfoSerializer, LearningCenterStudentsSerializer, LearningCenterTutorSerializer
+from .serializers import LearningCenterInfoSerializer, StudentSerializer, TutorSerializer
 from abc import ABC
 from django.db.models import Q
 from django.shortcuts import render
@@ -19,7 +22,7 @@ class Index(APIView):
         tutors = Tutor.objects.all()
 
         for tutor in tutors:
-            tutor_data = LearningCenterTutorSerializer(tutor).data
+            tutor_data = TutorSerializer(tutor).data
             tutors_data.append(tutor_data)
 
         return '''render(request, 'view_images.html', {"tutors": tutors})'''
@@ -31,43 +34,141 @@ class ViewLearningCenterInformation(APIView):
         'Chemistry': 'chemistry',
         'Biology': 'biology', 
         'Thai language': 'thai',
-        'Social studies' : 'socials',
-        'Foreign language' : 'foreign',
-        'Programming' : 'programming',
-        'Physics' : 'physics'
+        'Social studies': 'socials',
+        'Foreign language': 'foreign',
+        'Programming': 'programming',
+        'Physics': 'physics'
     }
-    serializer_class = LearningCenterInfoSerializer
+
     def get(self, request, lcid):
+        def add_thumbnails(learning_center_data):
+            learning_center_data['subject_thumbnails'] = {}
+            subjects = SubjectsTaught.objects.filter(learning_center=learning_center_data['learning_center_id'])
+            if subjects is not None:
+                for subject in subjects:
+                    url = self.url_table.get(subject, 'default')
+                    subject_thumbnail_url = f'https://github.com/Roshanen/muda/blob/main/subject_img/{url}.png'
+                    learning_center_data['subject_thumbnails'][subject] = subject_thumbnail_url
+
+        def get_tutor_profile(tutors_data):
+            tutor_list = []
+            for tutor in tutors_data:
+                profile = Profiles.objects.get(profile_id=tutor['profile_id'])
+                profile_json = ProfileSerializer(profile).data
+                tutor_list.append(profile_json)
+            return tutor_list
         try:
             lcid = UUID(lcid, version=4)
         except ValueError:
-            return Response({'message': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'Invalid Learning Center ID'}, status=status.HTTP_400_BAD_REQUEST)
         
         learning_center = get_object_or_404(LearningCenter, learning_center_id=lcid)
-        data = self.serializer_class(learning_center).data
-        # try:
-        #     data['subject_thumbnails'] = {}
-        #     subjects = data.get('subjects_taught')
-        #     for subject in subjects:
-        #         url = self.url_table.get(subject, 'default')
-        #         subject_thumbnail_url = f'https://github.com/Roshanen/muda/blob/main/subject_img/{url}.png'
-        #         data['subject_thumbnails'][subject] = subject_thumbnail_url
-        # except KeyError:
-        #     return Response(data, status=status.HTTP_404_NOT_FOUND)
+        learning_center_json = LearningCenterInfoSerializer(learning_center).data
+        add_thumbnails(learning_center_json)
 
-        # learning_center_id = data.get('learning_center_id', None)
-        # tutors = Tutor.objects.filter(learning_center=learning_center_id).values()
-        # data.update({ 'tutors': tutors })
+        tutors = Tutor.objects.filter(learning_center=lcid).values()
+        tutor_in_learning_center = get_tutor_profile(tutors)
+        learning_center_json.update({'tutors': tutor_in_learning_center})
 
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(learning_center_json, status=status.HTTP_200_OK)
 
 
-class ViewLearningCenterStudentInformation(APIView):
-    def get(self, request, learning_center_id):
-        learning_center = get_object_or_404(LearningCenter, learning_center_id=learning_center_id)
-        learning_center = LearningCenterInfoSerializer(learning_center)
-        learning_center_student = LearningCenterStudentsSerializer(learning_center)
-        return Response(learning_center_student.data, status=status.HTTP_200_OK)
+class AddStudent(APIView):
+    def post(self, request):
+        data: dict = request.data
+        # django append _id for foreignkey column
+        # So we will remove the old one and replace with ones with _id instead
+        learning_center = data.get('learning_center')
+        if learning_center is None:
+            return Response(status=http.HTTPStatus.NOT_FOUND)
+
+        user = request.user
+        # if user.user_id != learning_center.owner:
+        #     return Response(status=http.HTTPStatus.UNAUTHORIZED)
+
+        # change query object to normal dictionary
+        data_as_dict = {}
+        # dict is mutable so this work
+        [data_as_dict.update({key: val}) for key, val in data.items()]
+
+        image = Images(image_file=data_as_dict['image'])
+
+        profile = Profiles(
+            first_name=data_as_dict['first_name'],
+            middle_name=data_as_dict['middle_name'],
+            last_name=data_as_dict['last_name'],
+            description=data_as_dict['description'],
+            image=image
+        )
+        new_student = Student(profile=profile, learning_center_id=learning_center)
+
+        image.save()
+        profile.save()
+        new_student.save()
+        return Response(status=status.HTTP_200_OK)
+
+
+class AddTutor(APIView):
+    def post(self, request):
+        data: dict = request.data
+        # django append _id for foreignkey column
+        # So we will remove the old one and replace with ones with _id instead
+        learning_center = data.get('learning_center')
+        if learning_center is None:
+            return Response(status=http.HTTPStatus.NOT_FOUND)
+
+        user = request.user
+        # if user.user_id != learning_center.owner:
+        #     return Response(status=http.HTTPStatus.UNAUTHORIZED)
+
+        # change query object to normal dictionary
+        data_as_dict = {}
+        # dict is mutable so this work
+        [data_as_dict.update({key: val}) for key, val in data.items()]
+
+        image = Images(image_file=data_as_dict['image'])
+
+        profile = Profiles(
+            first_name=data_as_dict['first_name'],
+            middle_name=data_as_dict['middle_name'],
+            last_name=data_as_dict['last_name'],
+            description=data_as_dict['description'],
+            image=image
+        )
+        new_tutor = Tutor(profile=profile, learning_center_id=learning_center)
+
+        image.save()
+        profile.save()
+        new_tutor.save()
+        return Response(status=status.HTTP_200_OK)
+
+    def get(self, request):
+        form = TutorImageForm()
+        return render(request, "gallery.html", {"form": form})
+
+
+class ViewStudents(APIView):
+    def get(self, request, lcid):
+        student_obj = Student.objects.filter(learning_center=lcid)
+        student_list = []
+        for student in student_obj:
+            student_json = StudentSerializer(student).data
+            profile = Profiles.objects.filter(profile_id=student_json['profile'])[0]
+            profile_json = ProfileSerializer(profile).data
+            student_list.append(profile_json)
+        return Response({"student": student_list}, status=status.HTTP_200_OK)
+
+
+class ViewTutors(APIView):
+    def get(self, request, lcid):
+        tutor_obj = Tutor.objects.filter(learning_center=lcid)
+        tutor_list = []
+        for tutor in tutor_obj:
+            tutor_json = TutorSerializer(tutor).data
+            profile = Profiles.objects.filter(profile_id=tutor_json['profile'])[0]
+            profile_json = ProfileSerializer(profile).data
+            tutor_list.append(profile_json)
+        return Response({"tutors": tutor_list}, status=status.HTTP_200_OK)
 
 
 class EditLearningCenter(APIView):
@@ -77,67 +178,6 @@ class EditLearningCenter(APIView):
         if form.is_valid():
             form.save()
         return Response(status=status.HTTP_200_OK)
-
-
-class AddStudentToLearningCenter(APIView):
-    def post(self, request):
-        data: dict = request.data
-        # django append _id for foreignkey column
-        # So we will remove the old one and replace with ones with _id instead
-        learning_center_id = data['learning_center']
-
-        # learning_center = LearningCenter.objects.filter(learning_center_id=learning_center_id)
-        # owner_id = learning_center.get()
-        # if owner_id != request.user.id
-
-        data['learning_center_id'] = learning_center_id
-
-        # remove unwanted key
-        data.pop('learning_center')
-        data.pop('csrfmiddlewaretoken')
-
-        # change query object to normal dictionary
-        data_as_dict = {}
-        # dict is mutable so this work
-        [data_as_dict.update({key: val}) for key, val in data.items()]
-
-        new_student = Student(**data_as_dict)
-        new_student.save()
-        return Response(status=status.HTTP_200_OK)
-
-
-class AddTutorToLearningCenter(APIView):
-    def post(self, request):
-        data: dict = request.data
-        # django append _id for foreignkey column
-        # So we will remove the old one and replace with ones with _id instead
-        learning_center_id = data.get('learning_center')
-        if learning_center_id is None:
-            return Response(status=http.HTTPStatus.NOT_FOUND)
-
-        user = request.user
-        learning_center = LearningCenter(learning_center_id=learning_center_id)
-        # if user.user_id != learning_center.owner:
-        #     return Response(status=http.HTTPStatus.UNAUTHORIZED)
-
-        data['learning_center_id'] = learning_center_id
-
-        # remove unwanted key
-        data.pop('learning_center')
-        data.pop('csrfmiddlewaretoken')
-
-        # change query object to normal dictionary
-        data_as_dict = {}
-        # dict is mutable so this work
-        [data_as_dict.update({key: val}) for key, val in data.items()]
-
-        new_tutor = Tutor(**data_as_dict)
-        new_tutor.save()
-        return Response(status=status.HTTP_200_OK)
-
-    def get(self, request):
-        form = TutorImageForm()
-        return render(request, "gallery.html", {"form": form})
 
 
 class ManageLearningCenter(APIView):
