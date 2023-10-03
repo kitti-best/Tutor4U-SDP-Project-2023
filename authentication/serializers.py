@@ -36,14 +36,14 @@ class RegisterSerializer(serializers.ModelSerializer):
             password = validated_data.get('password', None)
             pwd_validator.validate(password)
             
-            firstname = validated_data.get('firstname', None)
-            lastname = validated_data.get('lastname', None)
-            if not(firstname or lastname):
-                raise ValidationError()
+            first_name = validated_data.get('first_name', None)
+            last_name = validated_data.get('last_name', None)
+            if not(first_name or last_name):
+                raise ValidationError({ 'message': 'Invalid input' })
             
             profile = Profiles(
-                firstname=firstname, 
-                lastname=lastname
+                first_name=first_name, 
+                last_name=last_name
             )
             
             user = self.Meta.model(

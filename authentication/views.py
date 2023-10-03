@@ -139,7 +139,7 @@ class EmailRegistrationAPIViews(RegisterBase):
             "protocol": 'https' if request.is_secure() else 'http'
         })
         
-        email = self.EmailMessage(mail_subject, message, [user.email])
+        email = EmailMessage(mail_subject, message, to=[user.email])
         if not email.send():
             return False
         return True
@@ -152,7 +152,7 @@ class EmailRegistrationAPIViews(RegisterBase):
         
         if (user is None):
             return Response(
-                { 'message': 'Invalid data' }, 
+                { 'message': 'Invalid input' }, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         

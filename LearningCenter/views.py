@@ -6,7 +6,7 @@ from rest_framework import status
 from Profiles.models import Profiles
 from Profiles.serializers import ProfileSerializer
 from .forms import CustomLearningCenterForm
-from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught
+from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught, LearningCenterInteriors
 from Images.models import Images
 from .serializers import LearningCenterInfoSerializer, StudentSerializer, TutorSerializer
 from abc import ABC
@@ -291,8 +291,20 @@ class LearningCenterInteriorView(APIView):
             not upload_image.__dict__.get('content_type').startswith('image/')
             ):
             return Response({ 'message': 'Invalid data' }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            lc_id = UUID(lc_id, version=4)
+        except ValueError:
+                return Response({'message': 'Invalid UUID'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        learning_center = get_object_or_404(LearningCenter, learning_center_id=lc_id)
         image = Images(image_file=upload_image)
+        interior = LearningCenterInteriors(
+            image=image, 
+            learning_center=learning_center
+        )
         image.save()
+        interior.save()
         return Response({ 'message': 'success' }, status=status.HTTP_201_CREATED)
 
     def delete(self, request):
@@ -300,6 +312,12 @@ class LearningCenterInteriorView(APIView):
         image_id = data.get('image_id', None)
         if image_id is None:
             return Response({ 'message': 'Invalid data' }, status=status.HTTP_400_BAD_REQUEST)
-        image = Images.objects.filter(image_id=image_id).first()
+            
+        try:
+            image_id = UUID(image_id, version=4)
+        except ValueError:
+                return Response({'message': 'Invalid UUID'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        image = get_object_or_404(Images, image_id=image_id)
         image.delete()
         return Response({ 'message': 'success' }, status=status.HTTP_200_OK)
