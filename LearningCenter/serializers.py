@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import LearningCenter, Tutor, Student
 
+from Locations.serializers import LocationsSerializer
+from .models import LearningCenter, Tutor, Student, Locations, Subjects
 
 class LearningCenterInfoSerializer(serializers.ModelSerializer):
     location = LocationsSerializer()
