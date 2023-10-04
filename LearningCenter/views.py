@@ -56,6 +56,7 @@ class ViewLearningCenterInformation(APIView):
                 profile_json.pop('profile_id')
                 tutor_list.append(profile_json)
             return tutor_list
+
         try:
             lcid = UUID(lcid, version=4)
         except ValueError:
