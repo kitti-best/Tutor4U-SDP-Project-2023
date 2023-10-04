@@ -373,7 +373,7 @@ class LearningCenterDistanceFilter(APIView):
         # max_distance_km = float(request.query_params.get('max_distance', 5))
 
         max_distance_km = 5
-        while (not learning_centers and max_distance_km <= 20):
+        while (not learning_centers and max_distance_km <= 15):
             learning_centers = self.filter_learning_centers_in_distance(
                 user_latitude, user_longitude, max_distance_km
             )
