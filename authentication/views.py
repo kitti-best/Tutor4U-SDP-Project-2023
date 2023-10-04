@@ -8,7 +8,6 @@ from django.http import HttpResponseRedirect
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from django.utils.decorators import classonlymethod
 from django.template.loader import render_to_string
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -20,9 +19,7 @@ from authentication.serializers import pwd_validator
 from .serializers import RegisterSerializer, LoginSerializer, LogoutAllSerializer
 from abc import ABC, abstractmethod
 from utils.token_manager import TokenManager
-from asgiref.sync import sync_to_async
 import environ
-import threading
 
 env = environ.Env()
 environ.Env.read_env()
@@ -139,7 +136,7 @@ class EmailRegistrationAPIViews(RegisterBase):
             "protocol": 'https' if request.is_secure() else 'http'
         })
         
-        email = self.EmailMessage(mail_subject, message, [user.email])
+        email = EmailMessage(mail_subject, message, to=[user.email])
         if not email.send():
             return False
         return True
@@ -152,7 +149,7 @@ class EmailRegistrationAPIViews(RegisterBase):
         
         if (user is None):
             return Response(
-                { 'message': 'Invalid data' }, 
+                { 'message': 'Invalid input' }, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
