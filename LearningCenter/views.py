@@ -42,11 +42,7 @@ class ViewLearningCenterInformation(APIView):
                 thumbnail_id = subject['image']
                 thumbnail = Images.objects.get(image_id=thumbnail_id)
                 thumbnail = ImageSerializer(thumbnail).data['image_file']
-                subject_thumbnail = {
-                    'subject_name': subject['subject_name'],
-                    'thumbnail': thumbnail,
-                }
-                learning_center_data['thumbnails'].append(subject_thumbnail)
+                learning_center_data['thumbnails'].append({subject['subject_name']: thumbnail})
 
         def get_tutor_profile(tutors_data):
             tutor_list = []
