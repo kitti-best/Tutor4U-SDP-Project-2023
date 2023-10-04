@@ -3,12 +3,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
+from Images.serializers import ImageSerializer
 from Profiles.models import Profiles
 from Profiles.serializers import ProfileSerializer
 from .forms import CustomLearningCenterForm
-from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught
+from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught, Subjects
 from Images.models import Images
-from .serializers import LearningCenterInfoSerializer, StudentSerializer, TutorSerializer
+from .serializers import LearningCenterInfoSerializer, StudentSerializer, TutorSerializer, SubjectSerializer
 from abc import ABC
 from django.db.models import Q
 from django.shortcuts import render
@@ -29,26 +30,21 @@ class Index(APIView):
 
 
 class ViewLearningCenterInformation(APIView):
-    url_table = {
-        'Math': 'math',
-        'Chemistry': 'chemistry',
-        'Biology': 'biology',
-        'Thai language': 'thai',
-        'Social studies': 'socials',
-        'Foreign language': 'foreign',
-        'Programming': 'programming',
-        'Physics': 'physics'
-    }
-
     def get(self, request, lcid):
         def add_thumbnails(learning_center_data):
-            learning_center_data['subject_thumbnails'] = {}
-            subjects = SubjectsTaught.objects.filter(learning_center=learning_center_data['learning_center_id'])
-            if subjects is not None:
-                for subject in subjects:
-                    url = self.url_table.get(subject, 'default')
-                    subject_thumbnail_url = f'https://github.com/Roshanen/muda/blob/main/subject_img/{url}.png'
-                    learning_center_data['subject_thumbnails'][subject] = subject_thumbnail_url
+            subjects_taught = SubjectsTaught.objects.filter(learning_center=lcid).values()
+            learning_center_data['thumbnails'] = []
+            for subject_taught in subjects_taught:
+                subject = Subjects.objects.get(subject_id=subject_taught['subject_id'])
+                subject = SubjectSerializer(subject).data
+                thumbnail_id = subject['image']
+                thumbnail = Images.objects.get(image_id=thumbnail_id)
+                thumbnail = ImageSerializer(thumbnail).data['image_file']
+                subject_thumbnail = {
+                    'subject_name': subject['subject_name'],
+                    'thumbnail': thumbnail,
+                }
+                learning_center_data['thumbnails'].append(subject_thumbnail)
 
         def get_tutor_profile(tutors_data):
             tutor_list = []
