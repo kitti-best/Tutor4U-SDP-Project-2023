@@ -51,6 +51,11 @@ class ViewLearningCenterInformation(APIView):
             for tutor in tutors_data:
                 profile = Profiles.objects.get(profile_id=tutor['profile_id'])
                 profile_json = ProfileSerializer(profile).data
+                profile_image_id = profile_json['image']
+                profile_image = Images.objects.get(image_id=profile_image_id)
+                profile_image = ImageSerializer(profile_image).data
+                profile_json['image'] = profile_image['image_file']
+                profile_json.pop('profile_id')
                 tutor_list.append(profile_json)
             return tutor_list
         try:
@@ -145,24 +150,32 @@ class AddTutor(APIView):
 
 class ViewStudents(APIView):
     def get(self, request, lcid):
-        student_obj = Student.objects.filter(learning_center=lcid)
+        students_data = Student.objects.filter(learning_center=lcid).values()
         student_list = []
-        for student in student_obj:
-            student_json = StudentSerializer(student).data
-            profile = Profiles.objects.filter(profile_id=student_json['profile'])[0]
+        for student in students_data:
+            profile = Profiles.objects.get(profile_id=student['profile_id'])
             profile_json = ProfileSerializer(profile).data
+            profile_image_id = profile_json['image']
+            profile_image = Images.objects.get(image_id=profile_image_id)
+            profile_image = ImageSerializer(profile_image).data
+            profile_json['image'] = profile_image['image_file']
+            profile_json.pop('profile_id')
             student_list.append(profile_json)
         return Response({"students": student_list}, status=status.HTTP_200_OK)
 
 
 class ViewTutors(APIView):
     def get(self, request, lcid):
-        tutor_obj = Tutor.objects.filter(learning_center=lcid)
+        tutors_data = Tutor.objects.filter(learning_center=lcid).values()
         tutor_list = []
-        for tutor in tutor_obj:
-            tutor_json = TutorSerializer(tutor).data
-            profile = Profiles.objects.filter(profile_id=tutor_json['profile'])[0]
+        for tutor in tutors_data:
+            profile = Profiles.objects.get(profile_id=tutor['profile_id'])
             profile_json = ProfileSerializer(profile).data
+            profile_image_id = profile_json['image']
+            profile_image = Images.objects.get(image_id=profile_image_id)
+            profile_image = ImageSerializer(profile_image).data
+            profile_json['image'] = profile_image['image_file']
+            profile_json.pop('profile_id')
             tutor_list.append(profile_json)
         return Response({"tutors": tutor_list}, status=status.HTTP_200_OK)
 
