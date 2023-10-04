@@ -1,10 +1,19 @@
 from rest_framework import serializers
-from .models import LearningCenter, Tutor, Student, Subjects
+from .models import LearningCenter, Tutor, Student
+
 
 class LearningCenterInfoSerializer(serializers.ModelSerializer):
+    location = LocationsSerializer()
+
     class Meta:
         model = LearningCenter
         fields = '__all__'
+
+    def create(self, validated_data):
+        location_data = validated_data.pop('location')
+        location = Locations.objects.create(**location_data)
+        learning_center = LearningCenter.objects.create(location=location, **validated_data)
+        return learning_center
 
 
 class StudentSerializer(serializers.ModelSerializer):

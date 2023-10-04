@@ -2,6 +2,12 @@ import http
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
+from django.db.models import Q
+from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
 
 from Images.serializers import ImageSerializer
 from Profiles.models import Profiles
@@ -11,11 +17,7 @@ from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaug
 from Images.models import Images
 from .serializers import LearningCenterInfoSerializer, StudentSerializer, TutorSerializer, SubjectSerializer
 from abc import ABC
-from django.db.models import Q
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
 from uuid import UUID
-
 
 class Index(APIView):
     def get(self, request):
@@ -197,6 +199,13 @@ class ManageLearningCenter(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @login_required
+    def put(self, request):
+        form = CustomLearningCenterForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+        return Response(status=status.HTTP_200_OK)
+
 
 class SearchLearningCenter(APIView, ABC):
     def get(self, request):
@@ -290,25 +299,143 @@ class ChangeLearningCenterStatus(APIView):
 
 
 class LearningCenterInteriorView(APIView):
-    
+    authentication_classes = (IsAuthenticated, )
+
     def patch(self, request):
         data = request.data
         lc_id = data.get('learning_center_id', None)
         upload_image = request.FILES.get('image', None)
-        if (lc_id is None or 
+        user = request.user
+        if (
+            lc_id is None or
             upload_image is None or 
             not upload_image.__dict__.get('content_type').startswith('image/')
             ):
-            return Response({ 'message': 'Invalid data' }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                { 'message': 'Invalid data' },
+                status=status.HTTP_400_BAD_REQUEST
+                )
+
+        try:
+            lc_id = UUID(lc_id, version=4)
+        except ValueError:
+                return Response(
+                    {'message': 'Invalid UUID'},
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
+
+        learning_center = get_object_or_404(
+            LearningCenter,
+            learning_center_id=lc_id
+            )
+
+        if user.user_id != learning_center.owner:
+            return Response(
+                { 'message': 'Permission denied' },
+                status=status.HTTP_403_FORBIDDEN
+                )
+
         image = Images(image_file=upload_image)
+        interior = LearningCenterInteriors(
+            image=image,
+            learning_center=learning_center
+        )
         image.save()
-        return Response({ 'message': 'success' }, status=status.HTTP_201_CREATED)
+        interior.save()
+        return Response(
+            { 'message': 'success' },
+            status=status.HTTP_201_CREATED
+            )
 
     def delete(self, request):
         data = request.data
         image_id = data.get('image_id', None)
-        if image_id is None:
-            return Response({ 'message': 'Invalid data' }, status=status.HTTP_400_BAD_REQUEST)
-        image = Images.objects.filter(image_id=image_id).first()
+        lc_id = data.get('learning_center_id', None)
+        user = request.user
+        if image_id is None or lc_id is None:
+            return Response(
+                { 'message': 'Invalid data' },
+                status=status.HTTP_400_BAD_REQUEST
+                )
+
+        try:
+            image_id = UUID(image_id, version=4)
+            lc_id = UUID(lc_id, version=4)
+        except ValueError:
+                return Response(
+                    {'message': 'Invalid UUID'},
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
+
+        image = get_object_or_404(Images, image_id=image_id)
+        learning_center_id = image.learning_center_id
+        learning_center = get_object_or_404(
+            LearningCenter,
+            learning_center_id=learning_center_id
+            )
+
+        if (
+            learning_center_id != lc_id or
+            user.user_id != learning_center.owner
+            ):
+            return Response(
+                { 'message': 'Permission denied' },
+                status=status.HTTP_403_FORBIDDEN
+                )
+
         image.delete()
         return Response({ 'message': 'success' }, status=status.HTTP_200_OK)
+
+class LearningCenterDistanceFilter(APIView):
+    def get(self, request):
+        user_latitude = float(request.query_params.get('lat'))
+        user_longitude = float(request.query_params.get('lon'))
+
+        # Maximum distance in kilometers
+        # max_distance_km = float(request.query_params.get('max_distance', 5))
+
+        max_distance_km = 5
+        while (not learning_centers and max_distance_km <= 15):
+            learning_centers = self.filter_learning_centers_in_distance(
+                user_latitude, user_longitude, max_distance_km
+            )
+            max_distance_km += 5
+        if not learning_centers:
+            return Response({"message": "No Learning Centers found within 15km distance."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Serialize and return the filtered Learning Centers
+        serializer = LearningCenterSerializer(learning_centers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def filter_learning_centers_in_distance(self, lat, lon, max_distance_km=5):
+        learning_centers = LearningCenter.objects.all()
+        filtered_centers = []
+
+        user_location = (lat, lon)
+
+        for center in learning_centers:
+            center_location = (center.latitude, center.longitude)
+            distance = self.vector_distance(*user_location, *center_location)
+
+            if distance <= max_distance_km:
+                filtered_centers.append(center)
+
+        return filtered_centers
+
+    def vector_distance(self, lat1, lon1, lat2, lon2):
+        earth_radius = 6371.0
+        constant_pi = math.pi
+        lat1_rad = lat1 * (constant_pi / 180.0)
+        lon1_rad = lon1 * (constant_pi / 180.0)
+        lat2_rad = lat2 * (constant_pi / 180.0)
+        lon2_rad = lon2 * (constant_pi / 180.0)
+
+        d_lat = lat2_rad - lat1_rad
+        d_lon = lon2_rad - lon1_rad
+
+        a = (math.sin(d_lat / 2))**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * (math.sin(d_lon / 2))**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        distance = earth_radius * c
+
+        return distance
