@@ -1,4 +1,4 @@
-import http
+import http, math
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,16 +7,16 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.db.models import Q
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
 
 from Profiles.models import Profiles
 from Profiles.serializers import ProfileSerializer
+from Images.models import Images
 from .forms import CustomLearningCenterForm
 from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught, LearningCenterInteriors
-from Images.models import Images
-from .serializers import LearningCenterInfoSerializer, StudentSerializer, TutorSerializer
+from .serializers import LearningCenterSerializer, LearningCenterInfoSerializer, StudentSerializer, TutorSerializer
 from abc import ABC
 from uuid import UUID
-
 
 class Index(APIView):
     def get(self, request):
@@ -173,15 +173,6 @@ class ViewTutors(APIView):
         return Response({"tutors": tutor_list}, status=status.HTTP_200_OK)
 
 
-class EditLearningCenter(APIView):
-    # @login_required (use this if want to make user login first to access this also use: from django.contrib.auth.decorators import login_required)
-    def post(request):
-        form = CustomLearningCenterForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-        return Response(status=status.HTTP_200_OK)
-
-
 class ManageLearningCenter(APIView):
     def post(self, request):
         serializer = LearningCenterInfoSerializer(data=request.data)
@@ -189,6 +180,13 @@ class ManageLearningCenter(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @login_required
+    def put(self, request):
+        form = CustomLearningCenterForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+        return Response(status=status.HTTP_200_OK)
 
 
 class SearchLearningCenter(APIView, ABC):
@@ -208,17 +206,13 @@ class SearchLearningCenter(APIView, ABC):
 
         if name:
             query |= Q(name__icontains=name)
-
         for level in levels:
             query &= Q(levels__icontains=level.strip())
-
         for subject in subjects_taught:
             query &= Q(subjects_taught__icontains=subject.strip())
             
         query &= Q(status='approve')
-
-        queryset = LearningCenter.objects.filter(query).order_by('-popularity')
-
+        queryset = LearningCenter.objects.filter(query).order_by('-rating')
         return queryset
 
 
@@ -369,3 +363,57 @@ class LearningCenterInteriorView(APIView):
         
         image.delete()
         return Response({ 'message': 'success' }, status=status.HTTP_200_OK)
+    
+class LearningCenterDistanceFilter(APIView):
+    def get(self, request):
+        user_latitude = float(request.query_params.get('lat'))
+        user_longitude = float(request.query_params.get('lon'))
+        
+        # Maximum distance in kilometers
+        # max_distance_km = float(request.query_params.get('max_distance', 5))
+
+        max_distance_km = 5
+        while (not learning_centers and max_distance_km <= 20):
+            learning_centers = self.filter_learning_centers_in_distance(
+                user_latitude, user_longitude, max_distance_km
+            )
+            max_distance_km += 5
+        if not learning_centers:
+            return Response({"message": "No Learning Centers found within 15km distance."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Serialize and return the filtered Learning Centers
+        serializer = LearningCenterSerializer(learning_centers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def filter_learning_centers_in_distance(self, lat, lon, max_distance_km=5):
+        learning_centers = LearningCenter.objects.all()
+        filtered_centers = []
+
+        user_location = (lat, lon)
+
+        for center in learning_centers:
+            center_location = (center.latitude, center.longitude)
+            distance = self.vector_distance(*user_location, *center_location)
+
+            if distance <= max_distance_km:
+                filtered_centers.append(center)
+
+        return filtered_centers
+
+    def vector_distance(self, lat1, lon1, lat2, lon2):
+        earth_radius = 6371.0
+        constant_pi = math.pi
+        lat1_rad = lat1 * (constant_pi / 180.0)
+        lon1_rad = lon1 * (constant_pi / 180.0)
+        lat2_rad = lat2 * (constant_pi / 180.0)
+        lon2_rad = lon2 * (constant_pi / 180.0)
+
+        d_lat = lat2_rad - lat1_rad
+        d_lon = lon2_rad - lon1_rad
+
+        a = (math.sin(d_lat / 2))**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * (math.sin(d_lon / 2))**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        distance = earth_radius * c
+
+        return distance
