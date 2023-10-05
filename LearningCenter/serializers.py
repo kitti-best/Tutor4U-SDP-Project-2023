@@ -15,6 +15,46 @@ class LearningCenterInfoSerializer(serializers.ModelSerializer):
         location = Locations.objects.create(**location_data)
         learning_center = LearningCenter.objects.create(location=location, **validated_data)
         return learning_center
+    
+    def data(self, learning_center):
+        data = super().data
+        
+        tutors = learning_center.tutor_set.all()
+        students = learning_center.student_set.all()
+        thumbnail = learning_center.thumbnail.get_image_url()
+        subjects_taught = learning_center.subjectstaught_set.all()
+        
+        self.get_subjects_taught(subjects_taught, data)
+        data.update({'thumbnail': thumbnail})
+        data.update({'tutors': self.get_profile(tutors)})
+        data.update({'students': self.get_profile(students)})
+        return data
+    
+    def get_profile(self, data):
+        result = []
+        for tutor in data:
+            profile = tutor.profile
+            data = {
+                'first_name': profile.first_name, 
+                'middle_name': profile.middle_name, 
+                'last_name': profile.last_name, 
+                'description':profile.description, 
+                'image': profile.image.get_image_url()
+            }
+            result.append(data)
+        return result
+    
+    def get_subjects_taught(self, subjects_data, response):
+        subjects_taught_list = []
+        for subject_taught in subjects_data:
+            subject = subject_taught.subject
+            data = {
+                'subject_name': subject.subject_name,
+                'image': subject.image.get_image_url()
+            }
+            subjects_taught_list.append(data)
+        response.update({'subjects_taught': subjects_taught_list})
+        return response
 
 
 class StudentSerializer(serializers.ModelSerializer):
