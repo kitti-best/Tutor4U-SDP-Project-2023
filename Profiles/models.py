@@ -34,3 +34,13 @@ class Profiles(models.Model):
     
     def __str__(self) -> str:
         return f'{self.profile_id}'
+    
+    def get_profile(self):
+        result = {
+            'first_name': self.first_name, 
+            'middle_name': self.middle_name, 
+            'last_name': self.last_name, 
+            'description': self.description, 
+            'image': self.image.get_image_url()
+        }
+        return result
