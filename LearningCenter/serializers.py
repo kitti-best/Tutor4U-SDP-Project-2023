@@ -34,25 +34,14 @@ class LearningCenterInfoSerializer(serializers.ModelSerializer):
         result = []
         for tutor in data:
             profile = tutor.profile
-            data = {
-                'first_name': profile.first_name, 
-                'middle_name': profile.middle_name, 
-                'last_name': profile.last_name, 
-                'description':profile.description, 
-                'image': profile.image.get_image_url()
-            }
-            result.append(data)
+            result.append(profile.get_profile())
         return result
     
     def get_subjects_taught(self, subjects_data, response):
         subjects_taught_list = []
         for subject_taught in subjects_data:
             subject = subject_taught.subject
-            data = {
-                'subject_name': subject.subject_name,
-                'image': subject.image.get_image_url()
-            }
-            subjects_taught_list.append(data)
+            subjects_taught_list.append(subject.get_subject())
         response.update({'subjects_taught': subjects_taught_list})
         return response
 
