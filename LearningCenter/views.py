@@ -112,7 +112,7 @@ class AddTutor(APIView):
             description=data_as_dict['description'],
             image=image
         )
-        new_tutor = subjects(profile=profile, learning_center_id=learning_center)
+        new_tutor = Tutor(profile=profile, learning_center_id=learning_center)
 
         image.save()
         profile.save()
@@ -142,7 +142,7 @@ class ViewStudents(APIView):
 
 class ViewTutors(APIView):
     def get(self, request, lcid):
-        tutors_data = subjects.objects.filter(learning_center=lcid).values()
+        tutors_data = Tutor.objects.filter(learning_center=lcid).values()
         tutor_list = []
         for tutor in tutors_data:
             profile = Profiles.objects.get(profile_id=tutor['profile_id'])
