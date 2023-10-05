@@ -11,7 +11,7 @@ urlpatterns = [
     path("add_tutor", views.AddTutor.as_view(), name="add_tutor"),
 
     path("view/<lcid>", views.ViewLearningCenterInformation.as_view(), name="view"),
-    path('create/', views.ManageLearningCenter.as_view(), name='manage-learning-center'),
+    path('manage/', views.ManageLearningCenter.as_view(), name='manage-learning-center'),
 
     path('change-status/', views.ChangeLearningCenterStatus.as_view()),
     path('pending-page/', views.LearningCenterDefaultPendingPage.as_view()),
