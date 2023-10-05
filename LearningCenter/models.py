@@ -60,34 +60,10 @@ class LearningCenter(models.Model):
     
     class Meta:
         order_with_respect_to = "learning_center_id"
-        permissions = [('learning_center_admin', 'can approve or reject the learning center, can view the waiting and reject learning center')]
+        permissions = [
+            ('learning_center_admin', 
+            'can approve or reject the learning center, can view the waiting and reject learning center')]
 
-class Locations(models.Model):
-    location_id = models.UUIDField(
-        default=uuid.uuid4, 
-        db_index=True, 
-        editable=False, 
-        primary_key=True, 
-        unique=True
-        )
-    house_number = models.CharField(max_length=15, default='-') # เลขที่บ้าน
-    section = models.CharField(max_length=10, default='-') # หมู่บ้าน
-    street = models.CharField(max_length=15, default='-') # ถนน
-    sub_district = models.CharField(max_length=30, default='-') # ตำบล
-    district = models.CharField(max_length=30, default='-') # อำเภอ
-    province = models.CharField(max_length=30, default='-') # จังหวัด
-    postcode = models.CharField(max_length=10, default='-')
-    country = models.CharField(max_length=30, default="Thailand")
-    latitude = models.FloatField(max_length=15, default=0)
-    longtitude = models.FloatField(max_length=15, default=0)
-    
-    def __str__(self) -> str:
-        data = self.__dict__.items()
-        result = ''
-        for key, value in data:
-            if key not in ['latitude', 'longtitude']:
-                result += f'{value}'
-        return result
 
 class LearningCenterInteriors(models.Model):
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
@@ -105,15 +81,16 @@ class Tutor(models.Model):
 
 
 class Subjects(models.Model):
-    subject_table = (
-        ('Math', 'math'),
-        ('Chemistry', 'chemistry'),
-        ('Biology', 'biology'),
-        ('Thai language', 'thai'),
-        ('Social studies', 'socials'),
-        ('Foreign language', 'foreign'),
-        ('Programming', 'programming'),
-        ('Physics', 'physics'),
+    SUBJECT_CHOICES = (
+        ("Biology", "Biology"),
+        ("Chemistry", "Chemistry"),
+        ("Foreign language", "Foreign language"),
+        ("Math", "Math"),
+        ("Physics", "Physics"),
+        ("Programming", "Programming"),
+        ("Science", "Science"),
+        ("Social studies", "Social studies"),
+        ("Thai language", "Thai language"),
     )
     subject_id = models.UUIDField(
         default=uuid.uuid4, 
@@ -124,7 +101,7 @@ class Subjects(models.Model):
         )
     subject_name = models.CharField(
         max_length=20, 
-        choices=subject_table, 
+        choices=SUBJECT_CHOICES, 
         editable=False, 
         null=False)
     image = models.ForeignKey(Images, default=default_image, on_delete=models.SET_DEFAULT)
@@ -136,6 +113,13 @@ class SubjectsTaught(models.Model):
 
 
 class Levels(models.Model):
+    LEVEL_CHOICES = (
+        ("college", "college"),
+        ("junior high school", "junior high school"),
+        ("kindergarten", "kindergarten"),
+        ("primary", "primary"),
+        ("senior high school", "senior high school"),
+    )
     level_id = models.UUIDField(
         default=uuid.uuid4, 
         db_index=True, 
@@ -143,7 +127,12 @@ class Levels(models.Model):
         primary_key=True, 
         unique=True
         )
-    level_name = models.CharField(max_length=255, null=False)
+    level_name = models.CharField(
+        max_length=50,
+        choices=LEVEL_CHOICES, 
+        editable=False, 
+        null=False
+        )
     image = models.ForeignKey(Images, default=default_image,on_delete=models.SET_DEFAULT)
 
 
