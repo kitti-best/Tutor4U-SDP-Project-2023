@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from Locations.serializers import LocationsSerializer
-from .models import LearningCenter, Tutor, Student, Locations, Subjects
+from .models import LearningCenter, Tutor, Student, Locations, Subjects, LearningCenterLevels, SubjectsTaught, Levels
 
 class LearningCenterInfoSerializer(serializers.ModelSerializer):
     location = LocationsSerializer()
@@ -12,10 +12,24 @@ class LearningCenterInfoSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         location_data = validated_data.pop('location')
+        learning_center_levels_data = validated_data.pop('learning_center_levels', [])
+        subjects_taught_data = validated_data.pop('subjects_taught', [])
+
         location = Locations.objects.create(**location_data)
         learning_center = LearningCenter.objects.create(location=location, **validated_data)
+
+        for subject_data in subjects_taught_data:
+            subject_name = subject_data['subject']
+            subject = Subjects.objects.get(subject_name=subject_name)
+            SubjectsTaught.objects.create(learning_center=learning_center, subject=subject)
+
+        for level_data in learning_center_levels_data:
+            level_name = level_data['level']
+            level = Levels.objects.get(level_name=level_name)
+            LearningCenterLevels.objects.create(learning_center=learning_center, level=level)
+
         return learning_center
-    
+
     def data(self, learning_center):
         data = super().data
         
