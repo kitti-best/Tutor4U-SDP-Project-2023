@@ -30,7 +30,7 @@ class Profiles(models.Model):
         unique=False
         )
     description = models.TextField(default='')
-    image = models.ForeignKey(Images, default=default_image, on_delete=models.CASCADE)
+    image = models.OneToOneField(Images, default=default_image, on_delete=models.CASCADE)
     
     def __str__(self) -> str:
         return f'{self.profile_id}'
