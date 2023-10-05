@@ -105,7 +105,13 @@ class Subjects(models.Model):
         editable=False, 
         null=False)
     image = models.ForeignKey(Images, default=default_image, on_delete=models.SET_DEFAULT)
-
+    
+    def get_subject(self):
+        result = {
+            'subject_name': self.subject_name,
+            'image': self.image.get_image_url()
+        }
+        return result
 
 class SubjectsTaught(models.Model):
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
