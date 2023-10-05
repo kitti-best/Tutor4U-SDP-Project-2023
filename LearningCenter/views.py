@@ -13,11 +13,13 @@ from Images.serializers import ImageSerializer
 from Profiles.models import Profiles
 from Profiles.serializers import ProfileSerializer
 from .forms import CustomLearningCenterForm
-from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught, Subjects
+from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught, Subjects, LearningCenterInteriors
 from Images.models import Images
-from .serializers import LearningCenterInfoSerializer, StudentSerializer, TutorSerializer, SubjectSerializer
+from .serializers import LearningCenterInfoSerializer, TutorSerializer, SubjectSerializer
+
 from abc import ABC
 from uuid import UUID
+import math
 
 class Index(APIView):
     def get(self, request):
@@ -32,44 +34,20 @@ class Index(APIView):
 
 
 class ViewLearningCenterInformation(APIView):
+    serializer_class = LearningCenterInfoSerializer
+    
     def get(self, request, lcid):
-        def add_thumbnails(learning_center_data):
-            subjects_taught = SubjectsTaught.objects.filter(learning_center=lcid).values()
-            learning_center_data['thumbnails'] = []
-            for subject_taught in subjects_taught:
-                subject = Subjects.objects.get(subject_id=subject_taught['subject_id'])
-                subject = SubjectSerializer(subject).data
-                thumbnail_id = subject['image']
-                thumbnail = Images.objects.get(image_id=thumbnail_id)
-                thumbnail = ImageSerializer(thumbnail).data['image_file']
-                learning_center_data['thumbnails'].append({subject['subject_name']: thumbnail})
-
-        def get_tutor_profile(tutors_data):
-            tutor_list = []
-            for tutor in tutors_data:
-                profile = Profiles.objects.get(profile_id=tutor['profile_id'])
-                profile_json = ProfileSerializer(profile).data
-                profile_image_id = profile_json['image']
-                profile_image = Images.objects.get(image_id=profile_image_id)
-                profile_image = ImageSerializer(profile_image).data
-                profile_json['image'] = profile_image['image_file']
-                profile_json.pop('profile_id')
-                tutor_list.append(profile_json)
-            return tutor_list
         try:
             lcid = UUID(lcid, version=4)
         except ValueError:
             return Response({'message': 'Invalid Learning Center ID'}, status=status.HTTP_400_BAD_REQUEST)
         
         learning_center = get_object_or_404(LearningCenter, learning_center_id=lcid)
-        learning_center_json = LearningCenterInfoSerializer(learning_center).data
-        add_thumbnails(learning_center_json)
+        
+        serializer = self.serializer_class(learning_center)
+        response = serializer.data(learning_center)
 
-        tutors = Tutor.objects.filter(learning_center=lcid).values()
-        tutor_in_learning_center = get_tutor_profile(tutors)
-        learning_center_json.update({'tutors': tutor_in_learning_center})
-
-        return Response(learning_center_json, status=status.HTTP_200_OK)
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class AddStudent(APIView):
@@ -134,7 +112,7 @@ class AddTutor(APIView):
             description=data_as_dict['description'],
             image=image
         )
-        new_tutor = Tutor(profile=profile, learning_center_id=learning_center)
+        new_tutor = subjects(profile=profile, learning_center_id=learning_center)
 
         image.save()
         profile.save()
@@ -164,7 +142,7 @@ class ViewStudents(APIView):
 
 class ViewTutors(APIView):
     def get(self, request, lcid):
-        tutors_data = Tutor.objects.filter(learning_center=lcid).values()
+        tutors_data = subjects.objects.filter(learning_center=lcid).values()
         tutor_list = []
         for tutor in tutors_data:
             profile = Profiles.objects.get(profile_id=tutor['profile_id'])
@@ -206,31 +184,33 @@ class ManageLearningCenter(APIView):
 class SearchLearningCenter(APIView, ABC):
     def get(self, request):
         name = self.request.query_params.get('name', '')
-        levels = self.request.query_params.get('level', '').split(',')
-        subjects_taught = self.request.query_params.get('subjects_taught', '').split(',')
-
-        result_learning_centers = self.search_learning_centers(name, levels, subjects_taught)
+        # level_name = self.request.query_params.get('level', '').split(',')
+        # subjects_taught = self.request.query_params.get('subjects_taught', '').split(',')
+        level_name = []
+        subjects_taught = []
+        result_learning_centers = self.search_learning_centers(name, level_name, subjects_taught)
         serializer = LearningCenterInfoSerializer(result_learning_centers, many=True)
+
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def search_learning_centers(self, name, levels, subjects_taught):
+    def search_learning_centers(self, name, level_name, subjects_taught):
         # Query use for complex queries
         query = Q()
 
         if name:
             query |= Q(name__icontains=name)
 
-        for level in levels:
-            query &= Q(levels__icontains=level.strip())
+        # for level in level_name:
+        #     query &= Q(levels__icontains=level.strip())
 
-        for subject in subjects_taught:
-            query &= Q(subjects_taught__icontains=subject.strip())
+        # for subject in subjects_taught:
+        #     query &= Q(subjects_taught__icontains=subject.strip())
             
         query &= Q(status='approve')
 
-        queryset = LearningCenter.objects.filter(query).order_by('-popularity')
-
+        # queryset = LearningCenter.objects.select_related().filter(query).order_by('-popularity')
+        queryset = LearningCenter.objects.select_related().filter(query)
         return queryset
 
 
@@ -400,7 +380,7 @@ class LearningCenterDistanceFilter(APIView):
             return Response({"message": "No Learning Centers found within 15km distance."}, status=status.HTTP_404_NOT_FOUND)
 
         # Serialize and return the filtered Learning Centers
-        serializer = LearningCenterSerializer(learning_centers, many=True)
+        serializer = LearningCenterInfoSerializer(learning_centers, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def filter_learning_centers_in_distance(self, lat, lon, max_distance_km=5):
