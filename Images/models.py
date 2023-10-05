@@ -34,7 +34,7 @@ class Images(models.Model):
         return default_image.image_id
     
     def get_image_url(self):
-        return f'https://{env("HOST")}:{env("PORT")}/{self.image_file.url}'
+        return f'https://{env("HOST")}:{env("PORT")}' + self.image_file.url
     
     def delete(self):
         os.remove(self.image_file.path)
