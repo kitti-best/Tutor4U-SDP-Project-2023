@@ -5,8 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from django.db.models import Q
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 
 from Images.serializers import ImageSerializer
@@ -15,7 +14,7 @@ from Profiles.serializers import ProfileSerializer
 from .forms import CustomLearningCenterForm
 from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught, Subjects, LearningCenterInteriors
 from Images.models import Images
-from .serializers import LearningCenterInfoSerializer, TutorSerializer, SubjectSerializer
+from .serializers import LearningCenterInfoSerializer, TutorSerializer
 
 from abc import ABC
 from uuid import UUID
@@ -45,7 +44,7 @@ class ViewLearningCenterInformation(APIView):
         learning_center = get_object_or_404(LearningCenter, learning_center_id=lcid)
         
         serializer = self.serializer_class(learning_center)
-        response = serializer.data(learning_center)
+        response = serializer.data
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -167,8 +166,13 @@ class EditLearningCenter(APIView):
 
 class ManageLearningCenter(APIView):
     def post(self, request):
-        serializer = LearningCenterInfoSerializer(data=request.data)
+        data = request.data
+        subjects_taught = data.get('subjects_taught', [])
+        levels = data.get('learning_center_levels', [])
+        serializer = LearningCenterInfoSerializer(data=data)
         if serializer.is_valid():
+            serializer._validated_data.update({'subjects_taught' : subjects_taught})
+            serializer._validated_data.update({'learning_center_levels': levels})
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -182,17 +186,21 @@ class ManageLearningCenter(APIView):
 
 
 class SearchLearningCenter(APIView, ABC):
+    serializer_class = LearningCenterInfoSerializer
     def get(self, request):
         name = self.request.query_params.get('name', '')
         # level_name = self.request.query_params.get('level', '').split(',')
         # subjects_taught = self.request.query_params.get('subjects_taught', '').split(',')
         level_name = []
         subjects_taught = []
+        response = []
         result_learning_centers = self.search_learning_centers(name, level_name, subjects_taught)
-        serializer = LearningCenterInfoSerializer(result_learning_centers, many=True)
+        for lc in result_learning_centers:
+            serializer = self.serializer_class(lc)
+            response.append(serializer.data)
 
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(response, status=status.HTTP_200_OK)
 
     def search_learning_centers(self, name, level_name, subjects_taught):
         # Query use for complex queries
@@ -362,22 +370,23 @@ class LearningCenterInteriorView(APIView):
         image.delete()
         return Response({ 'message': 'success' }, status=status.HTTP_200_OK)
 
+
 class LearningCenterDistanceFilter(APIView):
     def get(self, request):
         user_latitude = float(request.query_params.get('lat'))
         user_longitude = float(request.query_params.get('lon'))
-
+        distance = request.query_params.get('dis')
+        distance = float(distance) if distance.isnumeric() else 0
+        
         # Maximum distance in kilometers
         # max_distance_km = float(request.query_params.get('max_distance', 5))
 
-        max_distance_km = 5
-        while (not learning_centers and max_distance_km <= 15):
-            learning_centers = self.filter_learning_centers_in_distance(
-                user_latitude, user_longitude, max_distance_km
-            )
-            max_distance_km += 5
+        learning_centers = self.filter_learning_centers_in_distance(
+            user_latitude, user_longitude, distance
+        )
+
         if not learning_centers:
-            return Response({"message": "No Learning Centers found within 15km distance."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": f"No Learning Centers found within {distance}km distance."}, status=status.HTTP_404_NOT_FOUND)
 
         # Serialize and return the filtered Learning Centers
         serializer = LearningCenterInfoSerializer(learning_centers, many=True)
@@ -388,9 +397,9 @@ class LearningCenterDistanceFilter(APIView):
         filtered_centers = []
 
         user_location = (lat, lon)
-
         for center in learning_centers:
-            center_location = (center.latitude, center.longitude)
+            lc_location = center.location
+            center_location = (lc_location.latitude, lc_location.longitude)
             distance = self.vector_distance(*user_location, *center_location)
 
             if distance <= max_distance_km:
