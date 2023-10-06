@@ -35,6 +35,7 @@ class LearningCenter(models.Model):
         )
     email = models.EmailField(blank=True, default='', null=True)
     rating = models.FloatField(max_length=15, default=0)
+    popularity = None
     
     owner = models.ForeignKey(UserModel, on_delete=models.CASCADE, null=True)  # The user who owns the learning center
     location = models.ForeignKey(Locations, on_delete=models.SET_NULL, null=True)
@@ -120,11 +121,11 @@ class SubjectsTaught(models.Model):
 
 class Levels(models.Model):
     LEVEL_CHOICES = (
-        ("college", "college"),
-        ("junior high school", "junior high school"),
-        ("kindergarten", "kindergarten"),
-        ("primary", "primary"),
-        ("senior high school", "senior high school"),
+        ("University", "University"),
+        ("Postgraduate", "Postgraduate"),
+        ("Middle School", "Middle School"),
+        ("Kindergarten", "Kindergarten"),
+        ("Elementary", "Elementary"),
     )
     level_id = models.UUIDField(
         default=uuid.uuid4, 
