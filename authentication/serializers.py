@@ -57,7 +57,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
             return user
         except ValidationError as error:
-            print(error)
             return
 
 
