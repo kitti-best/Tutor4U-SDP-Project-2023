@@ -18,7 +18,7 @@ class Locations(models.Model):
     postcode = models.CharField(max_length=10, default='-')
     country = models.CharField(max_length=30, default="Thailand")
     latitude = models.FloatField(max_length=15, default=0)
-    longtitude = models.FloatField(max_length=15, default=0)
+    longitude = models.FloatField(max_length=15, default=0)
     
     def __str__(self) -> str:
         data = self.__dict__.items()
