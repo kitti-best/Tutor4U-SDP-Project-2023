@@ -16,6 +16,5 @@ urlpatterns = [
     path('change-status/', views.ChangeLearningCenterStatus.as_view()),
     path('pending-page/', views.LearningCenterDefaultPendingPage.as_view()),
     path('search/', views.SearchLearningCenter.as_view(), name='search-learning-center'),
-    path('search/distance/', views.LearningCenterDistanceFilter.as_view(), name='search-learning-center'),
     path('interiors/', views.LearningCenterInteriorView.as_view(), name='learning-center-interior'),
 ]

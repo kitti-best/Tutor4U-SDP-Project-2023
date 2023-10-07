@@ -12,7 +12,7 @@ from Images.serializers import ImageSerializer
 from Profiles.models import Profiles
 from Profiles.serializers import ProfileSerializer
 from .forms import CustomLearningCenterForm
-from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught, Subjects, LearningCenterInteriors
+from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught, Subjects, LearningCenterInteriors, LearningCenterLevels
 from Images.models import Images
 from .serializers import LearningCenterInfoSerializer, TutorSerializer
 
@@ -188,39 +188,83 @@ class ManageLearningCenter(APIView):
 class SearchLearningCenter(APIView, ABC):
     serializer_class = LearningCenterInfoSerializer
     def get(self, request):
-        name = self.request.query_params.get('name', '')
-        # level_name = self.request.query_params.get('level', '').split(',')
-        # subjects_taught = self.request.query_params.get('subjects_taught', '').split(',')
-        level_name = []
-        subjects_taught = []
+        name = request.query_params.get('name', '')
+        level_name = request.query_params.get('level', '').split(',')
+        subjects_taught = request.query_params.get('subjects_taught', '').split(',')
+        lat = request.query_params.get('lat', '')
+        lon = request.query_params.get('lon', '')
+        dis = request.query_params.get('dis', '')
+
         response = []
         result_learning_centers = self.search_learning_centers(name, level_name, subjects_taught)
+        if (lat and lon and dis):
+            if (dis > 20):
+                dis = 20
+            elif (dis < 0):
+                dis = 0
+            result_learning_centers = self.search_by_distance(result_learning_centers, lat, lon, dis)
         for lc in result_learning_centers:
             serializer = self.serializer_class(lc)
             response.append(serializer.data)
 
-
         return Response(response, status=status.HTTP_200_OK)
 
-    def search_learning_centers(self, name, level_name, subjects_taught):
-        # Query use for complex queries
-        query = Q()
+    def search_learning_centers(self, name='', level_name=[], subjects_taught=[]):
+        query = Q(status='approve')
 
         if name:
-            query |= Q(name__icontains=name)
+            query &= Q(name__icontains=name)
 
-        # for level in level_name:
-        #     query &= Q(levels__icontains=level.strip())
-
-        # for subject in subjects_taught:
-        #     query &= Q(subjects_taught__icontains=subject.strip())
-            
-        query &= Q(status='approve')
-
+        for level in level_name:
+            query &= Q()
         # queryset = LearningCenter.objects.select_related().filter(query).order_by('-popularity')
         queryset = LearningCenter.objects.select_related().filter(query)
+            
         return queryset
 
+    def search_by_distance(self, center_list, user_latitude, user_longtitude, dis):
+        print(type(center_list))
+
+        dis = float(dis) if dis.isnumeric() else 0
+        learning_centers = self.filter_learning_centers_in_distance(user_latitude, user_longtitude, dis)
+        if not learning_centers:
+            return Response({"message": f"No Learning Centers found within {dis}km dis."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = LearningCenterInfoSerializer(learning_centers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def filter_learning_centers_in_distance(self, lat, lon, max_distance_km=5):
+        learning_centers = LearningCenter.objects.all()
+        filtered_centers = []
+
+        user_location = (lat, lon)
+        for center in learning_centers:
+            lc_location = center.location
+            center_location = (lc_location.latitude, lc_location.longitude)
+            dis = self.vector_distance(*user_location, *center_location)
+
+            if dis <= max_distance_km:
+                filtered_centers.append(center)
+
+        return filtered_centers
+
+    def vector_distance(self, lat1, lon1, lat2, lon2):
+        earth_radius = 6371.0
+        constant_pi = math.pi
+        lat1_rad = lat1 * (constant_pi / 180.0)
+        lon1_rad = lon1 * (constant_pi / 180.0)
+        lat2_rad = lat2 * (constant_pi / 180.0)
+        lon2_rad = lon2 * (constant_pi / 180.0)
+
+        d_lat = lat2_rad - lat1_rad
+        d_lon = lon2_rad - lon1_rad
+
+        a = (math.sin(d_lat / 2))**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * (math.sin(d_lon / 2))**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        dis = earth_radius * c
+
+        return dis
 
 class LearningCenterDefaultPendingPage(APIView):
     def get(self, request):
@@ -369,58 +413,3 @@ class LearningCenterInteriorView(APIView):
 
         image.delete()
         return Response({ 'message': 'success' }, status=status.HTTP_200_OK)
-
-
-class LearningCenterDistanceFilter(APIView):
-    def get(self, request):
-        user_latitude = float(request.query_params.get('lat'))
-        user_longitude = float(request.query_params.get('lon'))
-        distance = request.query_params.get('dis')
-        distance = float(distance) if distance.isnumeric() else 0
-        
-        # Maximum distance in kilometers
-        # max_distance_km = float(request.query_params.get('max_distance', 5))
-
-        learning_centers = self.filter_learning_centers_in_distance(
-            user_latitude, user_longitude, distance
-        )
-
-        if not learning_centers:
-            return Response({"message": f"No Learning Centers found within {distance}km distance."}, status=status.HTTP_404_NOT_FOUND)
-
-        # Serialize and return the filtered Learning Centers
-        serializer = LearningCenterInfoSerializer(learning_centers, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def filter_learning_centers_in_distance(self, lat, lon, max_distance_km=5):
-        learning_centers = LearningCenter.objects.all()
-        filtered_centers = []
-
-        user_location = (lat, lon)
-        for center in learning_centers:
-            lc_location = center.location
-            center_location = (lc_location.latitude, lc_location.longitude)
-            distance = self.vector_distance(*user_location, *center_location)
-
-            if distance <= max_distance_km:
-                filtered_centers.append(center)
-
-        return filtered_centers
-
-    def vector_distance(self, lat1, lon1, lat2, lon2):
-        earth_radius = 6371.0
-        constant_pi = math.pi
-        lat1_rad = lat1 * (constant_pi / 180.0)
-        lon1_rad = lon1 * (constant_pi / 180.0)
-        lat2_rad = lat2 * (constant_pi / 180.0)
-        lon2_rad = lon2 * (constant_pi / 180.0)
-
-        d_lat = lat2_rad - lat1_rad
-        d_lon = lon2_rad - lon1_rad
-
-        a = (math.sin(d_lat / 2))**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * (math.sin(d_lon / 2))**2
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-        distance = earth_radius * c
-
-        return distance
