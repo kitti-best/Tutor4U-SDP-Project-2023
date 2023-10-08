@@ -1,9 +1,8 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from Profiles.models import Profiles
 import uuid
-
 
 class UserModel(AbstractUser):
 
@@ -38,3 +37,7 @@ class UserModel(AbstractUser):
     
     def activate(self):
         self.is_active = True
+    
+    def delete(self):
+        self.profile.delete()
+        super(UserModel, self).delete()

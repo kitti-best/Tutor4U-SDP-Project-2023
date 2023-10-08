@@ -167,10 +167,22 @@ class EditLearningCenter(APIView):
 class ManageLearningCenter(APIView):
     def post(self, request):
         data = request.data
+        upload_image = None
+        
+        if 'thumbnail' in data:
+            upload_image = data.get('thumbnail', None)
+            data.pop('thumbnail')
+        
         subjects_taught = data.get('subjects_taught', [])
         levels = data.get('learning_center_levels', [])
+        
         serializer = LearningCenterInfoSerializer(data=data)
         if serializer.is_valid():
+            
+            if upload_image:
+                image = Images.objects.create(image_file=upload_image)
+                serializer._validated_data.update({'thumbnail' : image.image_id})
+            
             serializer._validated_data.update({'subjects_taught' : subjects_taught})
             serializer._validated_data.update({'learning_center_levels': levels})
             serializer.save()

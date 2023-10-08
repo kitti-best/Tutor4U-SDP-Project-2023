@@ -44,3 +44,7 @@ class Profiles(models.Model):
             'image': self.image.get_image_url()
         }
         return result
+    
+    def delete(self):
+        self.image.delete()
+        super(Profiles, self).delete()
