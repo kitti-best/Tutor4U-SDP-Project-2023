@@ -198,10 +198,8 @@ class SearchLearningCenter(APIView, ABC):
         response = []
         result_learning_centers = self.search_learning_centers(name, level_name, subjects_taught)
         if (lat and lon and dis):
-            if (dis > 20):
-                dis = 20
-            elif (dis < 0):
-                dis = 0
+            dis = 20 if dis > 20 else dis
+            dis = 0 if dis < 0 else dis
             result_learning_centers = self.search_by_distance(result_learning_centers, lat, lon, dis)
         for lc in result_learning_centers:
             serializer = self.serializer_class(lc)
@@ -210,31 +208,24 @@ class SearchLearningCenter(APIView, ABC):
         return Response(response, status=status.HTTP_200_OK)
 
     def search_learning_centers(self, name='', level_name=[], subjects_taught=[]):
-        query = Q(status='approve')
-
+        query = LearningCenter.objects.filter(status='approve')
         if name:
-            query &= Q(name__icontains=name)
-
-        # for level in level_name:
-        #     query &= Q()
+            query &= LearningCenter.objects.filter(name=name)
+        for level in level_name:
+            query &= LearningCenter.objects.filter(learningcenterlevels__levels__level_name=level)
+        for subject in subjects_taught:
+            query &= LearningCenter.objects.filter(subjectstaught__subjects__subject_name=subject)
         # queryset = LearningCenter.objects.select_related().filter(query).order_by('-popularity')
-        queryset = LearningCenter.objects.select_related().filter(query)
-            
-        return queryset
+        return query
 
     def search_by_distance(self, center_list, user_latitude, user_longtitude, dis):
-        print(type(center_list))
-
         dis = float(dis) if dis.isnumeric() else 0
-        learning_centers = self.filter_learning_centers_in_distance(user_latitude, user_longtitude, dis)
-        if not learning_centers:
-            return Response({"message": f"No Learning Centers found within {dis}km dis."}, status=status.HTTP_404_NOT_FOUND)
+        learning_centers = self.filter_learning_centers_in_distance(center_list, user_latitude, user_longtitude, dis)
+        # if not learning_centers:
+        #     return Response({"message": f"No Learning Centers found within {dis}km dis."}, status=status.HTTP_404_NOT_FOUND)
+        return learning_centers
 
-        serializer = LearningCenterInfoSerializer(learning_centers, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def filter_learning_centers_in_distance(self, lat, lon, max_distance_km=5):
-        learning_centers = LearningCenter.objects.all()
+    def filter_learning_centers_in_distance(self,learning_centers , lat, lon, max_distance_km):
         filtered_centers = []
 
         user_location = (lat, lon)
@@ -242,7 +233,6 @@ class SearchLearningCenter(APIView, ABC):
             lc_location = center.location
             center_location = (lc_location.latitude, lc_location.longitude)
             dis = self.vector_distance(*user_location, *center_location)
-
             if dis <= max_distance_km:
                 filtered_centers.append(center)
 
