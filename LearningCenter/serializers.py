@@ -27,13 +27,11 @@ class LearningCenterInfoSerializer(serializers.ModelSerializer):
         location = Locations.objects.create(**location_data)
         learning_center = LearningCenter.objects.create(location=location, **validated_data)
         
-        for subject_data in subjects_taught:
-            subject_name = subject_data['subject']
+        for subject_name in subjects_taught:
             subject = get_object_or_404(Subjects, subject_name=subject_name)
             SubjectsTaught.objects.create(learning_center=learning_center, subject=subject)
 
-        for level_data in levels:
-            level_name = level_data['level']
+        for level_name in levels:
             level = get_object_or_404(Levels, level_name=level_name)
             LearningCenterLevels.objects.create(learning_center=learning_center, level=level)
         
