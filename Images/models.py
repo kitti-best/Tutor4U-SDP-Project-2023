@@ -8,7 +8,7 @@ env = environ.Env()
 environ.Env.read_env()
 
 def hash_upload(instance, filename):
-        return f'media/images/{instance.image_id}_{filename}'
+    return f'media/images/{instance.image_id}_{filename}'
 
 class Images(models.Model):
     default_id = '9a4b5d5d-01bd-493c-a143-2f8305dd2b35'
@@ -31,7 +31,7 @@ class Images(models.Model):
         if default_image is None:
             image = Images(
                 image_id=default_id, 
-                image_file='images/default_image.png'
+                image_file='media/images/default_image.png'
             )
             image.save()
             default_image = image
@@ -41,7 +41,8 @@ class Images(models.Model):
         return self.image_file.url
     
     def delete(self):
-        if self.image_id != self.default_id:
+        if str(self.image_id) != self.default_id:
+            print()
             self.image_file.delete()
             super(Images, self).delete()
     
