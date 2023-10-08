@@ -203,35 +203,50 @@ class SearchLearningCenter(APIView, ABC):
         name = request.query_params.get('name', '')
         level_name = request.query_params.get('level', '').split(',')
         subjects_taught = request.query_params.get('subjects_taught', '').split(',')
-        lat = request.query_params.get('lat', '')
-        lon = request.query_params.get('lon', '')
-        dis = request.query_params.get('dis', '')
+        lat = request.query_params.get('lat', None)
+        lon = request.query_params.get('lon', None)
+        dis = request.query_params.get('dis', None)
 
         response = []
         result_learning_centers = self.search_learning_centers(name, level_name, subjects_taught)
         if (lat and lon and dis):
-            dis = 20 if dis > 20 else dis
-            dis = 0 if dis < 0 else dis
+            dis = 0 if not dis.isnumeric() else int(dis)
+            lat = 0 if not self.is_float(lat) else float(lat)
+            lon = 0 if not self.is_float(lon) else float(lon)
             result_learning_centers = self.search_by_distance(result_learning_centers, lat, lon, dis)
         for lc in result_learning_centers:
             serializer = self.serializer_class(lc)
             response.append(serializer.data)
 
         return Response(response, status=status.HTTP_200_OK)
-
+    
+    def is_float(self, num):
+        try:
+            float(num)
+            return True
+        except ValueError:
+            return False
+    
     def search_learning_centers(self, name='', level_name=[], subjects_taught=[]):
-        query = LearningCenter.objects.filter(status='approve')
+        query = Q(status='approve')
         if name:
-            query &= LearningCenter.objects.filter(name=name)
+            query &= Q(name__icontains = name)
+        
         for level in level_name:
-            query &= LearningCenter.objects.filter(learningcenterlevels__levels__level_name=level)
+            if level != '':
+                query &= Q(learningcenterlevels__level__level_name__icontains=level)
+        
         for subject in subjects_taught:
-            query &= LearningCenter.objects.filter(subjectstaught__subjects__subject_name=subject)
-        # queryset = LearningCenter.objects.select_related().filter(query).order_by('-popularity')
-        return query
+            if subject != '':
+                query &= Q(subjectstaught__subject__subject_name__icontains=subject)
+        
+        queryset = LearningCenter.objects.select_related().filter(query).order_by('-rating')
+        return queryset
 
     def search_by_distance(self, center_list, user_latitude, user_longtitude, dis):
-        dis = float(dis) if dis.isnumeric() else 0
+        dis = 20 if dis > 20 else dis
+        dis = 0 if dis < 0 else dis
+        
         learning_centers = self.filter_learning_centers_in_distance(center_list, user_latitude, user_longtitude, dis)
         # if not learning_centers:
         #     return Response({"message": f"No Learning Centers found within {dis}km dis."}, status=status.HTTP_404_NOT_FOUND)
