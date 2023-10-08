@@ -20,7 +20,8 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('NODE_ENV') == "dev"
 
 ALLOWED_HOSTS = [
-    env('HOST')
+    env('HOST'), 
+    '*'
 ]
 
 
@@ -201,8 +202,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -210,6 +209,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+
 
 # emailing settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -219,3 +220,26 @@ EMAIL_HOST_USER = 'cakswatreuxngxram@gmail.com'
 EMAIL_HOST_PASSWORD = 'jffvhcsjfpnutkso'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+
+
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+#GG cloud storage
+from google.oauth2 import service_account
+GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
+  os.path.join(BASE_DIR, 'GGcloud_storage_credential.json')
+)
+
+DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+GS_PROJECT_ID = env('GS_PROJECT_ID')
+GS_BUCKET_NAME = env('GS_BUCKET_NAME')
+GS_IS_GZIPPED = True
+GZIP_CONTENT_TYPES = (
+    'image/png',
+    'image/jpg',
+    'image/jpeg'
+)
+MEDIA_ROOT = "media/"
+UPLOAD_ROOT = 'media/images/'
+MEDIA_URL = 'https://storage.googleapis.com/{}/'.format(GS_BUCKET_NAME)
