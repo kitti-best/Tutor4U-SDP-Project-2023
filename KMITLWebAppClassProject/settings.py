@@ -227,7 +227,7 @@ EMAIL_USE_TLS = True
 #GG cloud storage
 from google.oauth2 import service_account
 GS_CREDENTIALS = service_account.Credentials.from_service_account_file(
-  os.path.join(BASE_DIR, 'GGcloud_storage_credential.json')
+    os.path.join(BASE_DIR, 'GGcloud_storage_credential.json')
 )
 
 DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'

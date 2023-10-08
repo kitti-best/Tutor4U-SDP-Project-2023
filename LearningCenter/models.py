@@ -38,7 +38,7 @@ class LearningCenter(models.Model):
     popularity = None
     
     owner = models.ForeignKey(UserModel, on_delete=models.CASCADE, null=True)  # The user who owns the learning center
-    location = models.ForeignKey(Locations, on_delete=models.SET_NULL, null=True)
+    location = models.ForeignKey(Locations, on_delete=models.CASCADE, null=True)
     thumbnail = models.ForeignKey(
         Images, 
         default=default_image, 
@@ -74,11 +74,19 @@ class LearningCenterInteriors(models.Model):
 class Student(models.Model):
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
     profile = models.ForeignKey(Profiles, on_delete=models.CASCADE, null=True)
+    
+    def delete(self):
+        self.profile.delete()
+        super(Student, self).delete()
 
 
 class Tutor(models.Model):
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
     profile = models.ForeignKey(Profiles, on_delete=models.CASCADE, null=True)
+    
+    def delete(self):
+        self.profile.delete()
+        super(Tutor, self).delete()
 
 
 class Subjects(models.Model):
