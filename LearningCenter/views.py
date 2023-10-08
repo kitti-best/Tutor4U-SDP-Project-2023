@@ -215,8 +215,8 @@ class SearchLearningCenter(APIView, ABC):
         if name:
             query &= Q(name__icontains=name)
 
-        for level in level_name:
-            query &= Q()
+        # for level in level_name:
+        #     query &= Q()
         # queryset = LearningCenter.objects.select_related().filter(query).order_by('-popularity')
         queryset = LearningCenter.objects.select_related().filter(query)
             
