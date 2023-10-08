@@ -8,6 +8,7 @@ from abc import ABC
 from .forms import CustomUserForm
 from .models import UserModel
 from .serializer import UserModelSerializer
+from Images.models import Images
 
 
 class ViewSelfProfile(APIView, ABC):
@@ -16,7 +17,8 @@ class ViewSelfProfile(APIView, ABC):
     def get(self, request):
         user = request.user
         user = UserModelSerializer(user)
-        return JsonResponse(user.data, status=status.HTTP_200_OK)
+        return Response(user.data, status=status.HTTP_200_OK)
+    
 
 
 class EditUserProfile(APIView):
