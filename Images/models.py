@@ -10,6 +10,18 @@ environ.Env.read_env()
 def hash_upload(instance, filename):
     return f'media/images/{instance.image_id}_{filename}'
 
+def get_default_image():
+    default_id = '9a4b5d5d-01bd-493c-a143-2f8305dd2b35'
+    default_image = Images.objects.filter(image_id=default_id).first()
+    if default_image is None:
+        image = Images(
+            image_id=default_id, 
+            image_file='media/images/default_image.png'
+        )
+        image.save()
+        default_image = image
+    return default_image.image_id
+
 class Images(models.Model):
     default_id = '9a4b5d5d-01bd-493c-a143-2f8305dd2b35'
     image_id = models.UUIDField(
@@ -23,19 +35,6 @@ class Images(models.Model):
         height_field=None, 
         width_field=None, 
         default='media/images/default_image.png')
-    
-    @staticmethod
-    def get_default_image():
-        default_id = '9a4b5d5d-01bd-493c-a143-2f8305dd2b35'
-        default_image = Images.objects.filter(image_id=default_id).first()
-        if default_image is None:
-            image = Images(
-                image_id=default_id, 
-                image_file='media/images/default_image.png'
-            )
-            image.save()
-            default_image = image
-        return default_image.image_id
     
     def get_image_url(self):
         return self.image_file.url

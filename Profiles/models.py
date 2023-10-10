@@ -1,9 +1,9 @@
 from django.db import models
-from Images.models import Images
+from Images.models import Images, get_default_image
 from django.core.validators import MinLengthValidator
 import uuid
 
-default_image = Images.get_default_image()
+default_image = get_default_image
 
 class Profiles(models.Model):
     profile_id = models.UUIDField(

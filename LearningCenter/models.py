@@ -3,11 +3,11 @@ from django import forms
 from User.models import UserModel
 from django.core.validators import RegexValidator, MinLengthValidator
 from Locations.models import Locations
-from Images.models import Images
+from Images.models import Images, get_default_image
 from Profiles.models import Profiles
 import uuid
 
-default_image = Images.get_default_image()
+default_image = get_default_image
 
 
 class LearningCenter(models.Model):
