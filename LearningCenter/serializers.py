@@ -1,7 +1,4 @@
 from rest_framework import serializers
-
-from django.shortcuts import get_object_or_404
-
 from Locations.serializers import LocationsSerializer
 from .models import LearningCenter, Tutor, Student, Locations, Subjects, SubjectsTaught, Levels, LearningCenterLevels
 
@@ -28,12 +25,14 @@ class LearningCenterInfoSerializer(serializers.ModelSerializer):
         learning_center = LearningCenter.objects.create(location=location, **validated_data)
         
         for subject_name in subjects_taught:
-            subject = get_object_or_404(Subjects, subject_name=subject_name)
-            SubjectsTaught.objects.create(learning_center=learning_center, subject=subject)
+            subject = Subjects.objects.filter(subject_name=subject_name).first()
+            if (subject):
+                SubjectsTaught.objects.create(learning_center=learning_center, subject=subject)
 
         for level_name in levels:
-            level = get_object_or_404(Levels, level_name=level_name)
-            LearningCenterLevels.objects.create(learning_center=learning_center, level=level)
+            level = Levels.objects.filter(level_name=level_name).first()
+            if (level):
+                LearningCenterLevels.objects.create(learning_center=learning_center, level=level)
         
         return learning_center
     

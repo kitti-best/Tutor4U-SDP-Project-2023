@@ -248,8 +248,6 @@ class SearchLearningCenter(APIView, ABC):
         dis = 0 if dis < 0 else dis
         
         learning_centers = self.filter_learning_centers_in_distance(center_list, user_latitude, user_longtitude, dis)
-        # if not learning_centers:
-        #     return Response({"message": f"No Learning Centers found within {dis}km dis."}, status=status.HTTP_404_NOT_FOUND)
         return learning_centers
 
     def filter_learning_centers_in_distance(self,learning_centers , lat, lon, max_distance_km):
