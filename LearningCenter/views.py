@@ -204,7 +204,13 @@ class SearchLearningCenter(APIView, ABC):
         level_name = request.query_params.get('level', '').split(',')
         subjects_taught = request.query_params.get('subjects_taught', '').split(',')
         lat = request.query_params.get('lat', None)
+        if (str(lat)[::-1].find(".") > 15):
+            response = {"message" : "latitude invalid"}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
         lon = request.query_params.get('lon', None)
+        if (str(lon)[::-1].find(".") > 15):
+            response = {"message" : "longtitude invalid"}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
         dis = request.query_params.get('dis', None)
 
         response = []
