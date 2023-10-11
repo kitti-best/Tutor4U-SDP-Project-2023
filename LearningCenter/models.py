@@ -69,6 +69,10 @@ class LearningCenter(models.Model):
 class LearningCenterInteriors(models.Model):
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
     image = models.ForeignKey(Images, default=default_image, on_delete=models.CASCADE)
+    
+    def delete(self):
+        self.image.delete()
+        super(LearningCenterInteriors, self).delete()
 
 
 class Student(models.Model):
