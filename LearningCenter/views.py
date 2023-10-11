@@ -205,7 +205,13 @@ class SearchLearningCenter(APIView, ABC):
         level_name = request.query_params.get('level', '').split(',')
         subjects_taught = request.query_params.get('subjects_taught', '').split(',')
         lat = request.query_params.get('lat', None)
+        if (str(lat)[::-1].find(".") > 15 or not self.is_float(lat)):
+            response = {"message" : "latitude invalid"}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
         lon = request.query_params.get('lon', None)
+        if (str(lon)[::-1].find(".") > 15 or not self.is_float(lon)):
+            response = {"message" : "longtitude invalid"}
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
         dis = request.query_params.get('dis', None)
         
 
@@ -250,8 +256,6 @@ class SearchLearningCenter(APIView, ABC):
         dis = 0 if dis < 0 else dis
         
         learning_centers = self.filter_learning_centers_in_distance(center_list, user_latitude, user_longtitude, dis)
-        # if not learning_centers:
-        #     return Response({"message": f"No Learning Centers found within {dis}km dis."}, status=status.HTTP_404_NOT_FOUND)
         return learning_centers
 
     def filter_learning_centers_in_distance(self,learning_centers , lat, lon, max_distance_km):
