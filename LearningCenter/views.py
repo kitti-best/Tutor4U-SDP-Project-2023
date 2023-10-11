@@ -429,7 +429,7 @@ class LearningCenterInteriorView(APIView):
 
         if (
             learning_center_id != lc_id or
-            user.user_id != learning_center.owner
+            user.user_id != learning_center.owner.user_id
             ):
             return Response(
                 { 'message': 'Permission denied' },
