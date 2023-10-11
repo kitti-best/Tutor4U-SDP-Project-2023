@@ -19,6 +19,7 @@ from .serializers import LearningCenterInfoSerializer, TutorSerializer
 from abc import ABC
 from uuid import UUID
 import math
+import json
 
 class Index(APIView):
     def get(self, request):
@@ -167,8 +168,8 @@ class EditLearningCenter(APIView):
 class ManageLearningCenter(APIView):
     def post(self, request):
         data = request.data
+        lc_data = json.loads(data.get('data', None))
         upload_image = None
-        
         if 'thumbnail' in data:
             upload_image = data.get('thumbnail', None)
             data.pop('thumbnail')
@@ -176,12 +177,12 @@ class ManageLearningCenter(APIView):
         subjects_taught = data.get('subjects_taught', [])
         levels = data.get('learning_center_levels', [])
         
-        serializer = LearningCenterInfoSerializer(data=data)
+        serializer = LearningCenterInfoSerializer(data=lc_data)
         if serializer.is_valid():
             
             if upload_image:
                 image = Images.objects.create(image_file=upload_image)
-                serializer._validated_data.update({'thumbnail' : image.image_id})
+                serializer._validated_data.update({'thumbnail' : image})
             
             serializer._validated_data.update({'subjects_taught' : subjects_taught})
             serializer._validated_data.update({'learning_center_levels': levels})
@@ -212,6 +213,7 @@ class SearchLearningCenter(APIView, ABC):
             response = {"message" : "longtitude invalid"}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
         dis = request.query_params.get('dis', None)
+        
 
         response = []
         result_learning_centers = self.search_learning_centers(name, level_name, subjects_taught)
@@ -287,6 +289,7 @@ class SearchLearningCenter(APIView, ABC):
 
         return dis
 
+
 class LearningCenterDefaultPendingPage(APIView):
     def get(self, request):
         if not request.user.has_perm('LearningCenter.learning_center_admin'):
@@ -348,7 +351,7 @@ class ChangeLearningCenterStatus(APIView):
 
 
 class LearningCenterInteriorView(APIView):
-    authentication_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, )
 
     def patch(self, request):
         data = request.data
@@ -377,8 +380,9 @@ class LearningCenterInteriorView(APIView):
             LearningCenter,
             learning_center_id=lc_id
             )
-
-        if user.user_id != learning_center.owner:
+        
+        print(user, learning_center.owner)
+        if user.user_id != learning_center.owner.user_id:
             return Response(
                 { 'message': 'Permission denied' },
                 status=status.HTTP_403_FORBIDDEN
@@ -425,7 +429,7 @@ class LearningCenterInteriorView(APIView):
 
         if (
             learning_center_id != lc_id or
-            user.user_id != learning_center.owner
+            user.user_id != learning_center.owner.user_id
             ):
             return Response(
                 { 'message': 'Permission denied' },
