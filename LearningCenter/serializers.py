@@ -48,12 +48,16 @@ class LearningCenterInfoSerializer(serializers.ModelSerializer):
         thumbnail = learning_center.thumbnail.get_image_url()
         subjects_taught = learning_center.subjectstaught_set.all()
         levels = learning_center.learningcenterlevels_set.all()
+        interiors = learning_center.learningcenterinteriors_set.all()
 
         self.get_subjects_taught(subjects_taught, data)
         self.get_levels(levels, data)
+        self.get_interiors(interiors, data)
+        
         data.update({'thumbnail': thumbnail})
         data.update({'tutors': self.get_profile(tutors)})
         data.update({'students': self.get_profile(students)})
+        
         return data
     
     def get_profile(self, data):
@@ -83,7 +87,15 @@ class LearningCenterInfoSerializer(serializers.ModelSerializer):
         response.update({'levels': level_list})
         return level_list
 
-
+    def get_interiors(self, interiors_data, response):
+        interior_list = []
+        for interior in interiors_data:
+            image_url = interior.image.get_image_url() 
+            interior_list.append(image_url)
+        response.update({'interiors': interior_list})
+        return interior_list
+    
+    
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
