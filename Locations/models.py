@@ -10,13 +10,13 @@ class Locations(models.Model):
         unique=True
         )
     house_number = models.CharField(max_length=15, default='-') # เลขที่บ้าน
-    section = models.CharField(max_length=10, default='-') # หมู่บ้าน
-    street = models.CharField(max_length=15, default='-') # ถนน
-    sub_district = models.CharField(max_length=30, default='-') # ตำบล
-    district = models.CharField(max_length=30, default='-') # อำเภอ
-    province = models.CharField(max_length=30, default='-') # จังหวัด
+    section = models.CharField(max_length=50, default='-') # หมู่บ้าน
+    street = models.CharField(max_length=50, default='-') # ถนน
+    sub_district = models.CharField(max_length=50, default='-') # ตำบล
+    district = models.CharField(max_length=50, default='-') # อำเภอ
+    province = models.CharField(max_length=50, default='-') # จังหวัด
     postcode = models.CharField(max_length=10, default='-')
-    country = models.CharField(max_length=30, default="Thailand")
+    country = models.CharField(max_length=50, default="Thailand")
     latitude = models.FloatField(max_length=15, default=0)
     longitude = models.FloatField(max_length=15, default=0)
     
