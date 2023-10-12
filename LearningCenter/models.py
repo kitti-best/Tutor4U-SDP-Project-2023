@@ -59,6 +59,10 @@ class LearningCenter(models.Model):
     def update_status(self, status):
         self.status = status
     
+    def delete(self):
+        self.location.delete()
+        self.thumbnail.delete()
+        super(LearningCenter, self).delete()
     class Meta:
         order_with_respect_to = "learning_center_id"
         permissions = [
@@ -67,6 +71,13 @@ class LearningCenter(models.Model):
 
 
 class LearningCenterInteriors(models.Model):
+    interior_id = models.UUIDField(
+        default=uuid.uuid4, 
+        db_index=True, 
+        editable=False, 
+        primary_key=True, 
+        unique=True
+        )
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
     image = models.ForeignKey(Images, default=default_image, on_delete=models.CASCADE)
     
@@ -127,6 +138,13 @@ class Subjects(models.Model):
         return result
 
 class SubjectsTaught(models.Model):
+    subjects_taught_id = models.UUIDField(
+        default=uuid.uuid4, 
+        db_index=True, 
+        editable=False, 
+        primary_key=True, 
+        unique=True
+        )
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
     subject = models.ForeignKey(Subjects, on_delete=models.CASCADE, null=True)
 
@@ -156,6 +174,13 @@ class Levels(models.Model):
 
 
 class LearningCenterLevels(models.Model):
+    lc_level_id = models.UUIDField(
+        default=uuid.uuid4, 
+        db_index=True, 
+        editable=False, 
+        primary_key=True, 
+        unique=True
+        )
     learning_center = models.ForeignKey(LearningCenter, on_delete=models.CASCADE, null=True)
     level = models.ForeignKey(Levels, on_delete=models.CASCADE, null=True)
 
