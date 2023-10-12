@@ -170,12 +170,13 @@ class ManageLearningCenter(APIView):
         data = request.data
         lc_data = json.loads(data.get('data', None))
         upload_image = None
+        
         if 'thumbnail' in data:
             upload_image = data.get('thumbnail', None)
             data.pop('thumbnail')
         
-        subjects_taught = data.get('subjects_taught', [])
-        levels = data.get('learning_center_levels', [])
+        subjects_taught = lc_data.get('subjects_taught', [])
+        levels = lc_data.get('learning_center_levels', [])
         
         serializer = LearningCenterInfoSerializer(data=lc_data)
         if serializer.is_valid():
@@ -200,28 +201,33 @@ class ManageLearningCenter(APIView):
 
 class SearchLearningCenter(APIView, ABC):
     serializer_class = LearningCenterInfoSerializer
+    
     def get(self, request):
         name = request.query_params.get('name', '')
         level_name = request.query_params.get('level', '').split(',')
         subjects_taught = request.query_params.get('subjects_taught', '').split(',')
+        
         lat = request.query_params.get('lat', None)
         if ((str(lat)[::-1].find(".") > 15 or not self.is_float(lat)) and lat):
             response = {"message" : "latitude invalid"}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        
         lon = request.query_params.get('lon', None)
         if ((str(lon)[::-1].find(".") > 15 or not self.is_float(lon)) and lon):
             response = {"message" : "longtitude invalid"}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        
         dis = request.query_params.get('dis', None)
         
-
         response = []
         result_learning_centers = self.search_learning_centers(name, level_name, subjects_taught)
+        
         if (lat and lon and dis):
             dis = 0 if not dis.isnumeric() else int(dis)
             lat = 0 if not self.is_float(lat) else float(lat)
             lon = 0 if not self.is_float(lon) else float(lon)
             result_learning_centers = self.search_by_distance(result_learning_centers, lat, lon, dis)
+        
         for lc in result_learning_centers:
             serializer = self.serializer_class(lc)
             response.append(serializer.data)
@@ -232,7 +238,7 @@ class SearchLearningCenter(APIView, ABC):
         try:
             float(num)
             return True
-        except ValueError:
+        except:
             return False
     
     def search_learning_centers(self, name='', level_name=[], subjects_taught=[]):
@@ -381,7 +387,6 @@ class LearningCenterInteriorView(APIView):
             learning_center_id=lc_id
             )
         
-        print(user, learning_center.owner)
         if user.user_id != learning_center.owner.user_id:
             return Response(
                 { 'message': 'Permission denied' },
