@@ -41,7 +41,6 @@ class Images(models.Model):
     
     def delete(self):
         if str(self.image_id) != self.default_id:
-            print()
             self.image_file.delete()
             super(Images, self).delete()
     
