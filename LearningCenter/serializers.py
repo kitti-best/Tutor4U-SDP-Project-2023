@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from Locations.serializers import LocationsSerializer
-from .models import LearningCenter, Tutor, Student, Locations, Subjects, SubjectsTaught, Levels, LearningCenterLevels
+from .models import LearningCenter, Tutor, Student, Locations, Subjects, SubjectsTaught, Levels, LearningCenterLevels, LearningCenterInteriors
 
 
 
@@ -40,23 +40,27 @@ class LearningCenterInfoSerializer(serializers.ModelSerializer):
     def data(self):
         data = super().data
         learning_center = self.instance
-
-        tutors = learning_center.tutor_set.all()
-        students = learning_center.student_set.all()
         
         thumbnail = learning_center.thumbnail.get_image_url()
         subjects_taught = learning_center.subjectstaught_set.all()
         levels = learning_center.learningcenterlevels_set.all()
-        interiors = learning_center.learningcenterinteriors_set.all()
 
         self.get_subjects_taught(subjects_taught, data)
         self.get_levels(levels, data)
-        self.get_interiors(interiors, data)
         
         data.update({'thumbnail': thumbnail})
+        
+        return data
+    
+    def get_learning_center_detail(self, data):
+        learning_center = self.instance
+        tutors = learning_center.tutor_set.all()
+        students = learning_center.student_set.all()
+        interiors = learning_center.learningcenterinteriors_set.all()
+
+        self.get_interiors(interiors, data)
         data.update({'tutors': self.get_profile(tutors)})
         data.update({'students': self.get_profile(students)})
-        
         return data
     
     def get_profile(self, data):
@@ -100,7 +104,7 @@ class StudentSerializer(serializers.ModelSerializer):
         model = Student
         fields = '__all__'
 
-
+    
 class TutorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tutor
