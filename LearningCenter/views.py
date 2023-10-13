@@ -12,7 +12,7 @@ from Images.serializers import ImageSerializer
 from Profiles.models import Profiles
 from Profiles.serializers import ProfileSerializer
 from .forms import CustomLearningCenterForm
-from .models import LearningCenter, Student, Tutor, TutorImageForm, SubjectsTaught, Subjects, LearningCenterInteriors, LearningCenterLevels
+from .models import LearningCenter, Student, Tutor, TutorImageForm, LearningCenterInteriors
 from Images.models import Images
 from .serializers import LearningCenterInfoSerializer, TutorSerializer
 
@@ -46,6 +46,7 @@ class ViewLearningCenterInformation(APIView):
         
         serializer = self.serializer_class(learning_center)
         response = serializer.data
+        response = serializer.get_learning_center_detail(response)
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -167,29 +168,31 @@ class EditLearningCenter(APIView):
 
 class ManageLearningCenter(APIView):
     def post(self, request):
-        data = request.data
-        lc_data = json.loads(data.get('data', None))
-        upload_image = None
-        
-        if 'thumbnail' in data:
-            upload_image = data.get('thumbnail', None)
-            data.pop('thumbnail')
-        
-        subjects_taught = lc_data.get('subjects_taught', [])
-        levels = lc_data.get('learning_center_levels', [])
-        
-        serializer = LearningCenterInfoSerializer(data=lc_data)
-        if serializer.is_valid():
+        try:
+            data = request.data
+            lc_data = json.loads(data.get('data', None))
+            upload_image = None
             
-            if upload_image:
-                image = Images.objects.create(image_file=upload_image)
-                serializer._validated_data.update({'thumbnail' : image})
+            if 'thumbnail' in data:
+                upload_image = data.get('thumbnail', None)
+                data.pop('thumbnail')
             
-            serializer._validated_data.update({'subjects_taught' : subjects_taught})
-            serializer._validated_data.update({'learning_center_levels': levels})
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            subjects_taught = lc_data.get('subjects_taught', [])
+            levels = lc_data.get('learning_center_levels', [])
+            
+            serializer = LearningCenterInfoSerializer(data=lc_data)
+            if serializer.is_valid():
+                serializer._validated_data.update({'subjects_taught' : subjects_taught})
+                serializer._validated_data.update({'learning_center_levels': levels})
+                
+                if upload_image:
+                    image = Images.objects.create(image_file=upload_image)
+                    serializer._validated_data.update({'thumbnail' : image})
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({'message': serializer.error_messages}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({'message': "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)
 
     @login_required
     def put(self, request):
@@ -358,8 +361,39 @@ class ChangeLearningCenterStatus(APIView):
 
 class LearningCenterInteriorView(APIView):
     permission_classes = (IsAuthenticated, )
-
-    def patch(self, request):
+    
+    def get(self, request):
+        lc_id = request.query_params.get('learning_center_id', None)
+        user = request.user
+        
+        try:
+            lc_id = UUID(lc_id, version=4)
+        except:
+            return Response(
+                {'message': 'Invalid UUID'},
+                status=status.HTTP_400_BAD_REQUEST
+                )
+        learning_center = LearningCenter.objects.filter(learning_center_id=lc_id).first()
+        if user.user_id != learning_center.owner.user_id:
+            return Response(
+                { "message": "Permission denied" }, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        
+        interiors = learning_center.learningcenterinteriors_set.all()
+        response = {}
+        temp = []
+        for interior in interiors:
+            data = {
+                "image_id": interior.image.image_id, 
+                "image": interior.image.get_image_url()
+            }
+            temp.append(data)
+        response.update({ 'interiors': temp })
+        return Response(response, status=status.HTTP_200_OK)
+    
+    def put(self, request):
         data = request.data
         lc_id = data.get('learning_center_id', None)
         upload_image = request.FILES.get('image', None)
@@ -376,7 +410,7 @@ class LearningCenterInteriorView(APIView):
 
         try:
             lc_id = UUID(lc_id, version=4)
-        except ValueError:
+        except:
                 return Response(
                     {'message': 'Invalid UUID'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -419,7 +453,7 @@ class LearningCenterInteriorView(APIView):
         try:
             image_id = UUID(image_id, version=4)
             lc_id = UUID(lc_id, version=4)
-        except ValueError:
+        except:
                 return Response(
                     {'message': 'Invalid UUID'},
                     status=status.HTTP_400_BAD_REQUEST
