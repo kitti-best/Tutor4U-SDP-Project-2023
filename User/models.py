@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
-from django.contrib.auth.models import AbstractUser, UserManager
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from Profiles.models import Profiles
 import uuid
 
@@ -31,6 +32,15 @@ class UserModel(AbstractUser):
     date_joined = models.DateTimeField(auto_now_add=True)
     first_name = None
     last_name = None
+    
+    coins = models.BigIntegerField(default=10, editable=True, unique=False)
+    phone = models.CharField(
+        max_length=30, 
+        default='', 
+        validators=[RegexValidator(
+            regex="((\+66|0)(\d{1,2}\-?\d{3}\-?\d{3,4}))|((\+๖๖|๐)([๐-๙]{1,2}\-?[๐-๙]{3}\-?[๐-๙]{3,4}))"
+            )]
+        )
     
     def __str__(self):
         return self.username
