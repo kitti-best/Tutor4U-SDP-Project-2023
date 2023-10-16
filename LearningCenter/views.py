@@ -224,8 +224,7 @@ class SearchLearningCenter(APIView, ABC):
         
         response = []
         result_learning_centers = self.search_learning_centers(name, level_name, subjects_taught)
-        
-        if (lat and lon and dis):
+        if (lat and lon and dis and self.is_float(dis)):
             dis = 0 if not dis.isnumeric() else int(dis)
             lat = 0 if not self.is_float(lat) else float(lat)
             lon = 0 if not self.is_float(lon) else float(lon)
@@ -360,11 +359,11 @@ class ChangeLearningCenterStatus(APIView):
 
 
 class LearningCenterInteriorView(APIView):
-    permission_classes = (IsAuthenticated, )
+    # permission_classes = (IsAuthenticated, )
     
     def get(self, request):
         lc_id = request.query_params.get('learning_center_id', None)
-        user = request.user
+        # user = request.user
         
         try:
             lc_id = UUID(lc_id, version=4)
@@ -373,15 +372,16 @@ class LearningCenterInteriorView(APIView):
                 {'message': 'Invalid UUID'},
                 status=status.HTTP_400_BAD_REQUEST
                 )
-        learning_center = LearningCenter.objects.filter(learning_center_id=lc_id).first()
-        if user.user_id != learning_center.owner.user_id:
-            return Response(
-                { "message": "Permission denied" }, 
-                status=status.HTTP_403_FORBIDDEN
-            )
+        learning_center = get_object_or_404(LearningCenter, learning_center_id=lc_id)
+        # if user.user_id != learning_center.owner.user_id:
+        #     return Response(
+        #         { "message": "Permission denied" }, 
+        #         status=status.HTTP_403_FORBIDDEN
+        #     )
         
         
         interiors = learning_center.learningcenterinteriors_set.all()
+        
         response = {}
         temp = []
         for interior in interiors:
@@ -390,14 +390,21 @@ class LearningCenterInteriorView(APIView):
                 "image": interior.image.get_image_url()
             }
             temp.append(data)
-        response.update({ 'interiors': temp })
+            
+        serializer = LearningCenterInfoSerializer(learning_center)
+        learning_center = serializer.data
+        
+        response.update({ 
+            'learning_center': learning_center,
+            'interiors': temp 
+            })
         return Response(response, status=status.HTTP_200_OK)
     
     def put(self, request):
         data = request.data
         lc_id = data.get('learning_center_id', None)
         upload_image = request.FILES.get('image', None)
-        user = request.user
+        # user = request.user
         if (
             lc_id is None or
             upload_image is None or 
@@ -421,11 +428,11 @@ class LearningCenterInteriorView(APIView):
             learning_center_id=lc_id
             )
         
-        if user.user_id != learning_center.owner.user_id:
-            return Response(
-                { 'message': 'Permission denied' },
-                status=status.HTTP_403_FORBIDDEN
-                )
+        # if user.user_id != learning_center.owner.user_id:
+        #     return Response(
+        #         { 'message': 'Permission denied' },
+        #         status=status.HTTP_403_FORBIDDEN
+        #         )
 
         image = Images(image_file=upload_image)
         interior = LearningCenterInteriors(
@@ -440,10 +447,10 @@ class LearningCenterInteriorView(APIView):
             )
 
     def delete(self, request):
-        data = request.data
-        image_id = data.get('image_id', None)
-        lc_id = data.get('learning_center_id', None)
-        user = request.user
+        image_id = request.query_params.get('image_id', None)
+        lc_id = request.query_params.get('learning_center_id', None)
+
+        # user = request.user
         if image_id is None or lc_id is None:
             return Response(
                 { 'message': 'Invalid data' },
@@ -459,21 +466,25 @@ class LearningCenterInteriorView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                     )
 
-        image = get_object_or_404(Images, image_id=image_id)
-        learning_center_id = image.learning_center_id
-        learning_center = get_object_or_404(
-            LearningCenter,
-            learning_center_id=learning_center_id
+        # image = get_object_or_404(Images, image_id=image_id)
+        interior = get_object_or_404(LearningCenterInteriors, image_id=image_id)
+        lc = interior.learning_center
+        
+        if lc.learning_center_id != lc_id:
+            return Response(
+                { "message": "Permission deny" }, 
+                status=status.HTTP_403_FORBIDDEN
             )
 
-        if (
-            learning_center_id != lc_id or
-            user.user_id != learning_center.owner.user_id
-            ):
-            return Response(
-                { 'message': 'Permission denied' },
-                status=status.HTTP_403_FORBIDDEN
-                )
+        # if (
+        #     learning_center_id != lc_id or
+        #     user.user_id != learning_center.owner.user_id
+        #     ):
+        #     return Response(
+        #         { 'message': 'Permission denied' },
+        #         status=status.HTTP_403_FORBIDDEN
+        #         )
 
-        image.delete()
+        interior.delete()
+        
         return Response({ 'message': 'success' }, status=status.HTTP_200_OK)
